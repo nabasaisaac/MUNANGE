@@ -198,7 +198,7 @@ class AddCustomers:
                     default_photo2 = f.read()
                 # cursor.execute(query, (student_name, gender, student_class, stream, default_photo))
                 cursor.execute(query, (default_photo2, student_name, gender, student_class, stream,
-                                       status, fees, balance))
+                                       status, fees, balance ))
                 resetting_fields()
                 MainWindow.__new__(MainWindow).success_information(f'Customer successfully registered.')
                 connection.commit()
