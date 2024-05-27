@@ -3,6 +3,7 @@ import sqlite3
 from customtkinter import *
 from PIL import ImageTk, Image
 from main_window import MainWindow
+
 class AddCustomers:
     def __init__(self, display_window):
         self.display_window = display_window
@@ -77,7 +78,8 @@ class AddCustomers:
         CTkLabel(first_frame, bg_color='white', fg_color='white', text='Email',
                  text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w').pack(fill=X)
         self.email_entry = CTkEntry(first_frame, bg_color='white', border_color='#4CC053', fg_color='#f1fcf1',
-                                   border_width=1, height=35, text_color='#0C2844')
+                                   border_width=1, height=35, text_color='#0C2844', placeholder_text=
+                                   'example@gmail.com', placeholder_text_color='gray50')
         self.email_entry.pack(fill=X, pady=(0, 10))
         self.email_entry.bind('<FocusIn>', lambda event: self.email_entry.configure(border_color='#44aaee'))
         self.email_entry.bind('<FocusOut>', lambda event: self.email_entry.configure(border_color='#4CC053'))
@@ -85,7 +87,8 @@ class AddCustomers:
         CTkLabel(first_frame, bg_color='white', fg_color='white', text='National ID No.',
                  text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w').pack(fill=X)
         self.id_number_entry = CTkEntry(first_frame, bg_color='white', border_color='#4CC053', fg_color='#f1fcf1',
-                                   border_width=1, height=35, text_color='#0C2844')
+                                   border_width=1, height=35, text_color='#0C2844', placeholder_text=
+                                   "Customer's NIN", placeholder_text_color='gray50')
         self.id_number_entry.pack(fill=X)
         self.id_number_entry.bind('<FocusIn>', lambda event: self.id_number_entry.configure(border_color='#44aaee'))
         self.id_number_entry.bind('<FocusOut>', lambda event: self.id_number_entry.configure(border_color='#4CC053'))
@@ -102,11 +105,11 @@ class AddCustomers:
         self.first_name_entry.bind('<FocusIn>', lambda event: self.first_name_entry.configure(border_color='#44aaee'))
         self.first_name_entry.bind('<FocusOut>', lambda event: self.first_name_entry.configure(border_color='#4CC053'))
 
-
         CTkLabel(second_frame, bg_color='white', fg_color='white', text='Phone Number',
                  text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w').pack(fill=X)
         self.phone_entry = CTkEntry(second_frame, bg_color='white', border_color='#4CC053', fg_color='#f1fcf1',
-                                   border_width=1, height=35, text_color='#0C2844')
+                                   border_width=1, height=35, text_color='#0C2844', placeholder_text=
+                                   '07XXXXXXXXXX', placeholder_text_color='gray50')
         self.phone_entry.pack(fill=X, pady=(0, 10))
         self.phone_entry.bind('<FocusIn>', lambda event: self.phone_entry.configure(border_color='#44aaee'))
         self.phone_entry.bind('<FocusOut>', lambda event: self.phone_entry.configure(border_color='#4CC053'))
@@ -141,15 +144,20 @@ class AddCustomers:
 
     def uploading_photo(self):
         try:
+            self.passport_image_browsed = 'images/default_photo.png'
             self.passport_image_browsed = filedialog.askopenfilename(title='Select student passport photo',
                                                                 filetypes=(('jpg files', '*.jpg'), ('png files', '*.png'),
                                                                            ('All types', '*.*')))
 
-            student_current_passport = Image.open(self.passport_image_browsed)
-            circular_image = MainWindow.__new__(MainWindow).make_circular_image(student_current_passport)
+            current_current_passport = Image.open(self.passport_image_browsed)
+
+            circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
         except AttributeError:
-            pass
+            self.passport_image_browsed = 'images/default_photo.png'
+            current_current_passport = Image.open(self.passport_image_browsed)
+            circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
+            self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
 
     def saving_customer(self):
         condition1 = self.first_name_entry.get().strip() == '' or self.sur_name_entry.get().strip() == ''
@@ -158,6 +166,7 @@ class AddCustomers:
         if condition1 or condition2:
             MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')
             return
+
         if self.email_entry.get().strip():
             import re
             if not re.match(r"[^@]+@[^@]+\.[^@]+", self.email_entry.get()):
@@ -168,16 +177,16 @@ class AddCustomers:
             MainWindow.__new__(MainWindow).unsuccessful_information('Invalid phone number')
             return
 
+        if not self.gender_value.get() in ['Male', 'Female']:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid gender')
+            return
+
         if self.id_number_entry.get():
             if not len(self.id_number_entry.get().strip()) == 14 or not self.id_number_entry.get().strip().isupper():
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
 
         else:
-            connection = sqlite3.connect('munange.db')
-            cursor = connection.cursor()
-            query = "INSERT INTO customers (photo, name, gender, phone, email, nin, district)"
-
             def resetting_fields():
                 self.sur_name_entry.delete(0, END)
                 self.first_name_entry.delete(0, END)
@@ -185,35 +194,59 @@ class AddCustomers:
                     pass
                 else:
                     self.other_name_entry.delete(0, END)
-                self.customer_photo_label.configure(image=CTkImage(default_circular_image), size=(150, 150))
+                self.customer_photo_label.configure(image=CTkImage(default_circular_image, size=(150, 150)))
                 self.passport_image_browsed = 'images/default_photo.png'
+                self.id_number_entry.delete(0, END)
+                self.phone_entry.delete(0, END)
+                self.district_entry.delete(0, END)
+                self.email_entry.delete(0, END)
                 self.sur_name_entry.focus_set()
 
+            connection = sqlite3.connect('munange.db')
+            cursor = connection.cursor()
+
+            if self.other_name_entry.get():
+                customer_name = (f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()} "
+                                 f"{self.other_name_entry.get().strip().upper()}")
+            else:
+                customer_name = f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()}"
             try:
                 with open(self.passport_image_browsed, 'rb') as f:
-                    student_photo = f.read()
+                    photo = f.read()
+                if self.email_entry.get() and not self.id_number_entry.get():
+                    query = "INSERT INTO customers (photo, name, gender, phone, email, district) VALUES (?, ?, ?, ?, ?, ?)"
+                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                           self.phone_entry.get().strip(), self.email_entry.get().strip(),
+                                           self.district_entry.get().strip().upper()))
 
-            except Exception:
-                with open('images/default_photo.png', 'rb') as f:
-                    default_photo2 = f.read()
-                # cursor.execute(query, (student_name, gender, student_class, stream, default_photo))
-                cursor.execute(query, (default_photo2, student_name, gender, student_class, stream,
-                                       status, fees, balance ))
-                resetting_fields()
-                MainWindow.__new__(MainWindow).success_information(f'Customer successfully registered.')
+                elif not self.email_entry.get() and self.id_number_entry.get():
+
+                    query = "INSERT INTO customers (photo, name, gender, nin, district) VALUES (?, ?, ?, ?, ?)"
+                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                           self.id_number_entry.get().strip(), self.district_entry.get().strip().upper()))
+
+                elif not self.email_entry.get() and not self.id_number_entry.get():
+
+                    query = "INSERT INTO customers (photo, name, gender, phone, district) VALUES (?, ?, ?, ?, ?)"
+                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                           self.phone_entry.get().strip(), self.district_entry.get().strip().upper()))
+
+                else:
+                    query = "INSERT INTO customers (photo, name, gender, phone, email, nin, district) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
+                                           self.email_entry.get().strip(), self.id_number_entry.get().strip(),
+                                           self.district_entry.get().strip().upper()))
                 connection.commit()
                 cursor.close()
                 connection.close()
-                return
+                MainWindow.__new__(MainWindow).success_information(f'Customer successfully registered.')
+                resetting_fields()
 
-            cursor.execute(query, (student_photo, student_name, gender, student_class, stream,
-                                       status, fees, balance))
-            connection.commit()
-            cursor.close()
-            connection.close()
+            except AttributeError:
+                self.passport_image_browsed = 'images/default_photo.png'
+                self.saving_customer()
 
-            resetting_fields()
-            MainWindow.__new__(MainWindow).success_information(f'Customer successfully registered.')
+
 
 
 
