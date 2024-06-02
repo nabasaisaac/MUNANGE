@@ -4,6 +4,7 @@ from main_window import MainWindow
 from tkinter import ttk
 import sqlite3
 
+
 class ViewCustomers:
     def __init__(self, display_window):
         self.display_window = display_window
@@ -16,7 +17,7 @@ class ViewCustomers:
         self.buttons_frame = CTkFrame(self.display_window, bg_color='gray95', fg_color='white')
         self.buttons_frame.pack(fill=X, pady=20, padx=20)
 
-        self.scrollable_frame = CTkScrollableFrame(self.display_window, fg_color='white', bg_color='gray95',
+        self.scrollable_frame = CTkFrame(self.display_window, fg_color='white', bg_color='gray95',
                                                    )
         self.scrollable_frame.pack(fill=BOTH, expand=True, padx=20)
 
@@ -67,7 +68,7 @@ class ViewCustomers:
         customers_tree.column('customer_id', width=150, minwidth=150, anchor=CENTER)
         customers_tree.column('name', width=300, minwidth=200, anchor='w')
         customers_tree.column('gender', width=150, minwidth=100, anchor='w')
-        customers_tree.column('phone', width=150, minwidth=120, anchor=CENTER)
+        customers_tree.column('phone', width=150, minwidth=120, anchor='w')
         customers_tree.column('district', width=150, minwidth=120, anchor='w')
 
         # creating headings
@@ -75,13 +76,13 @@ class ViewCustomers:
         customers_tree.heading('customer_id', text='CUSTOMER ID', anchor=CENTER)
         customers_tree.heading('name', text='NAME', anchor='w')
         customers_tree.heading('gender', text='GENDER', anchor='w')
-        customers_tree.heading('phone', text='PHONE', anchor=CENTER)
+        customers_tree.heading('phone', text='PHONE', anchor='w')
         customers_tree.heading('district', text='DISTRICT', anchor='w')
 
-        customers_tree.pack(fill=BOTH, expand=True)
+        customers_tree.pack(fill=BOTH, expand=True, pady=5, padx=5)
 
         self.showing_customers_in_tree()
-        # customers_tree.bind('<Double-1>', lambda event: self.double_click(event))
+        customers_tree.bind('<Double-1>', lambda event: self.double_click(event))
 
     def showing_customers_in_tree(self):
         customers_tree.delete(*customers_tree.get_children())
@@ -114,7 +115,7 @@ class ViewCustomers:
         connection = sqlite3.connect('munange.db')
         cursor = connection.cursor()
         query = "SELECT customer_id, name, gender, phone, district FROM customers WHERE name LIKE ? ORDER BY name ASC"
-        cursor.execute(query, (f'%{self.search_customers_entry.get().upper()}%', ))
+        cursor.execute(query, (f'%{self.search_customers_entry.get().strip().upper()}%', ))
         customers = cursor.fetchall()
         cursor.close()
         connection.close()
@@ -125,6 +126,8 @@ class ViewCustomers:
                                                                             columns[3], columns[4]), tags=my_tag)
 
             count += 1
+        if len(customers) == 0:
+            MainWindow.__new__(MainWindow).unsuccessful_information(f'No customers match your search.')
         return len(customers)
 
     def print_or_download_students(self, isdirectory):
@@ -135,5 +138,28 @@ class ViewCustomers:
                 CustomerExcel(directory)
         else:
             CustomerExcel(False)
+
+    def double_click(self, event):
+        global row_double_click
+        row_double_click = customers_tree.identify_row(event.y)
+        customer_info = customers_tree.item(row_double_click, 'values')
+
+        # print(customers_data)
+        if row_double_click:
+            from add_customers import AddCustomers
+            connection = sqlite3.connect('munange.db')
+            cursor = connection.cursor()
+            customer_id = customer_info[0]
+            cursor.execute(f"SELECT * FROM customers WHERE customer_id='{customer_id}'")
+            customers_data = cursor.fetchone()
+            cursor.close()
+            connection.close()
+            AddCustomers.__new__(AddCustomers).updating_customer(self.display_window, customers_data)
+        else:
+            pass
+
+
+
+
 
 

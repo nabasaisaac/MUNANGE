@@ -37,7 +37,7 @@ class MainWindow:
                  bg_color='#e9edf2', text_color='#085f00').pack(side=LEFT, padx=(20, 0))
 
         """Working on the profile of the user"""
-        image = Image.open('images/default_photo.png')
+        image = Image.open('images/m.jpg')
         circular_image = self.make_circular_image(image)
         self.profile_button = CTkButton(upper_frame, bg_color='#e9edf2', fg_color='#e9edf2', compound=RIGHT,
                                         image=CTkImage(circular_image, size=(50, 50)), text='NABASA ISAAC\nnabasaisaac',
@@ -97,9 +97,9 @@ class MainWindow:
                                      self.employees, self.display_frame))
         self.employees_button.pack(side=TOP, padx=25)
 
-        self.sliding(self.customers_button, self.customers, self.display_frame)
+        # self.sliding(self.customers_button, self.customers, self.display_frame)
 
-        # self.sliding(self.employees_button, self.employees, self.display_frame)
+        self.sliding(self.employees_button, self.employees, self.display_frame)
 
         self.logout_button = CTkButton(self.side_frame, bg_color='#3BA541', fg_color='#3BA541', corner_radius=15,
                                      width=150, height=40, hover_color='#2D9834', text_color='white',
@@ -125,7 +125,8 @@ class MainWindow:
         pass
 
     def employees(self, display_frame):
-        pass
+        from employees import Employees
+        Employees(display_frame)
 
     def hiding_hover(self):
         self.dashboard_button.configure(border_color='#3BA541')

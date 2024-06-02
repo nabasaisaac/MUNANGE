@@ -1,8 +1,9 @@
 import sqlite3
-
+import io
 from customtkinter import *
 from PIL import ImageTk, Image
 from main_window import MainWindow
+from tkinter import messagebox
 
 class AddCustomers:
     def __init__(self, display_window):
@@ -119,7 +120,7 @@ class AddCustomers:
 
         self.gender_value = StringVar()
         self.gender_value.set('Select')
-        self.genders = ['Male', 'Female']
+        self.genders = ['MALE', 'FEMALE']
         self.gender_combo = CTkComboBox(second_frame, variable=self.gender_value, text_color='gray20', border_color='#4CC053',
                                   fg_color='#f1fcf1', values=self.genders, border_width=1, bg_color='white', height=35,
                                   dropdown_fg_color='white', dropdown_hover_color='#DBEAFF', dropdown_text_color='black'
@@ -135,9 +136,9 @@ class AddCustomers:
         self.district_entry.bind('<FocusOut>', lambda event: self.district_entry.configure(border_color='#4CC053'))
 
         """Save customer button here"""
-        save_frame = CTkFrame(self.basic_infor_frame, fg_color='white', bg_color='white')
-        save_frame.pack(fill=X, padx=20, pady=(10, 80), expand=True)
-        self.save_button = CTkButton(save_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
+        self.save_frame = CTkFrame(self.basic_infor_frame, fg_color='white', bg_color='white')
+        self.save_frame.pack(fill=X, padx=20, pady=(10, 80), expand=True)
+        self.save_button = CTkButton(self.save_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
                                      image=CTkImage(Image.open('icons/save.png'), size=(20, 20)), text_color='white',
                                      text='Save', command=self.saving_customer)
         self.save_button.pack(side=RIGHT)
@@ -167,84 +168,331 @@ class AddCustomers:
             MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')
             return
 
-        if self.email_entry.get().strip():
+        if self.email_entry.get().strip() == '':
+            pass
+        else:
             import re
             if not re.match(r"[^@]+@[^@]+\.[^@]+", self.email_entry.get()):
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid email address')
                 return
 
-        elif not self.phone_entry.get().strip().isdigit() or len(self.phone_entry.get().strip()) > 10:
+        if not self.phone_entry.get().strip().isdigit() or len(self.phone_entry.get().strip()) != 10:
             MainWindow.__new__(MainWindow).unsuccessful_information('Invalid phone number')
             return
 
-        if not self.gender_value.get() in ['Male', 'Female']:
+        if not self.gender_value.get() in ['MALE', 'FEMALE']:
             MainWindow.__new__(MainWindow).unsuccessful_information('Invalid gender')
             return
-
-        if self.id_number_entry.get():
+        if self.id_number_entry.get().strip() == '':
+            pass
+        else:
             if not len(self.id_number_entry.get().strip()) == 14 or not self.id_number_entry.get().strip().isupper():
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
 
-        else:
-            def resetting_fields():
-                self.sur_name_entry.delete(0, END)
-                self.first_name_entry.delete(0, END)
-                if self.other_name_entry.get() == '':
-                    pass
-                else:
-                    self.other_name_entry.delete(0, END)
-                self.customer_photo_label.configure(image=CTkImage(default_circular_image, size=(150, 150)))
-                self.passport_image_browsed = 'images/default_photo.png'
-                self.id_number_entry.delete(0, END)
-                self.phone_entry.delete(0, END)
-                self.district_entry.delete(0, END)
-                self.email_entry.delete(0, END)
-                self.sur_name_entry.focus_set()
+        def resetting_fields():
+            self.sur_name_entry.delete(0, END)
+            self.first_name_entry.delete(0, END)
+            if self.other_name_entry.get() == '':
+                pass
+            else:
+                self.other_name_entry.delete(0, END)
+            self.customer_photo_label.configure(image=CTkImage(default_circular_image, size=(150, 150)))
+            self.passport_image_browsed = 'images/default_photo.png'
+            self.id_number_entry.delete(0, END)
+            self.phone_entry.delete(0, END)
+            self.district_entry.delete(0, END)
+            self.email_entry.delete(0, END)
+            self.sur_name_entry.focus_set()
 
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+
+        if self.other_name_entry.get():
+            customer_name = (
+                f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()} "
+                f"{self.other_name_entry.get().strip().upper()}")
+        else:
+            customer_name = f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()}"
+        try:
+            with open(self.passport_image_browsed, 'rb') as f:
+                photo = f.read()
+            if self.email_entry.get() and not self.id_number_entry.get():
+                query = "INSERT INTO customers (photo, name, gender, phone, email, district) VALUES (?, ?, ?, ?, ?, ?)"
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.email_entry.get().strip(),
+                                       self.district_entry.get().strip().upper()))
+
+            elif not self.email_entry.get() and self.id_number_entry.get():
+
+                query = "INSERT INTO customers (photo, name, gender, nin, district) VALUES (?, ?, ?, ?, ?)"
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.id_number_entry.get().strip(), self.district_entry.get().strip().upper()))
+
+            elif not self.email_entry.get() and not self.id_number_entry.get():
+
+                query = "INSERT INTO customers (photo, name, gender, phone, district) VALUES (?, ?, ?, ?, ?)"
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.district_entry.get().strip().upper()))
+
+            else:
+                query = "INSERT INTO customers (photo, name, gender, phone, email, nin, district) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                cursor.execute(query,
+                               (photo, customer_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
+                                self.email_entry.get().strip(), self.id_number_entry.get().strip(),
+                                self.district_entry.get().strip().upper()))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            MainWindow.__new__(MainWindow).success_information(f'Customer successfully registered.')
+            resetting_fields()
+
+        except AttributeError:
+            self.passport_image_browsed = 'images/default_photo.png'
+            self.saving_customer()
+
+    def updating_customer(self, window, customer_data):
+        for widget in window.winfo_children()[2:]:
+            widget.destroy()
+        self.display_window = window
+        self.designing_window()
+
+        image = Image.open(io.BytesIO(customer_data[1]))
+        customer_photo = MainWindow.__new__(MainWindow).make_circular_image(image)
+        self.customer_photo_label.configure(image=CTkImage(customer_photo, size=(150, 150)))
+
+        self.note_label.pack_forget()
+        self.warning_text.pack_forget()
+
+        self.name = CTkLabel(self.side_frame, bg_color='white', fg_color='white', text=f'{customer_data[2]}',
+                                   text_color='gray40', font=('roboto', 15, 'bold'))
+        self.name.pack(fill=X, padx=20, pady=(0, 5))
+
+        CTkLabel(self.side_frame, bg_color='white', fg_color='white', text='EMAIL',
+                                   text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w'
+                 ).pack(fill=X, padx=20)
+
+        self.email = CTkLabel(self.side_frame, bg_color='white', fg_color='white', text=f'{customer_data[5]}',
+                                   text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w')
+        self.email.pack(fill=X, padx=20)
+
+        CTkLabel(self.side_frame, bg_color='white', fg_color='white', text='ACCESS NO',
+                                   text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w'
+                 ).pack(fill=X, padx=20, pady=(5, 0))
+
+        self.access_no = CTkLabel(self.side_frame, bg_color='white', fg_color='white', text=f'{customer_data[0]}',
+                                   text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w')
+        self.access_no.pack(fill=X, padx=20)
+
+        self.back_button = CTkButton(self.side_frame, bg_color='white', fg_color='#0C2844', font=('roboto', 15),
+                                    text='Back', text_color='white', compound=LEFT,
+                                    image=CTkImage(Image.open('icons/back_image.png')), width=20,
+                                    command=self.back_to_view_customers)
+        self.back_button.pack(side=BOTTOM, pady=(0, 10))
+
+        if len(customer_data[2].split()) >= 3:
+            self.sur_name_entry.insert(0, customer_data[2].split()[0])
+            self.first_name_entry.insert(0, customer_data[2].split()[1])
+            self.other_name_entry.insert(0, customer_data[2].split()[2::])
+        else:
+            self.sur_name_entry.insert(0, customer_data[2].split()[0])
+            self.first_name_entry.insert(0, customer_data[2].split()[1])
+        self.phone_entry.insert(0, customer_data[4])
+        self.gender_value.set(customer_data[3])
+        if customer_data[5] == 'Not Provided':
+            # self.email_entry.configure(placeholder_text_color='example@gmail.com')
+            pass
+        else:
+            self.email_entry.insert(0, customer_data[5])
+        if customer_data[6] == 'Not Provided':
+            # self.id_number_entry.configure(placeholder_text_color="Customer's NIN")
+            pass
+        else:
+            self.id_number_entry.insert(0, customer_data[6])
+
+        self.district_entry.insert(0, customer_data[7])
+
+        self.delete_button = CTkButton(self.save_frame, bg_color='white', fg_color='#ff5c5c', font=('roboto', 15),
+                                    text='Delete', text_color='white', compound=LEFT, width=100, hover_color='#ff3f3f',
+                                    image=CTkImage(Image.open('icons/DELETE.png'), size=(15, 15)),
+                                    command=lambda: self.deleting_customer(customer_data))
+
+        self.delete_button.pack(side=RIGHT, padx=(0, 15))
+
+        self.upload_photo_button.configure(text='Change Image', command=self.update_photo)
+        self.save_button.configure(width=100, text='Update', command=lambda: self.update_customer_command(customer_data))
+
+    def update_customer_command(self, customer_data):
+        condition1 = self.first_name_entry.get().strip() == '' or self.sur_name_entry.get().strip() == ''
+        condition2 = (self.phone_entry.get().strip() == '' or self.gender_value.get().strip() == 'Select' or
+                      self.district_entry.get().strip() == '')
+        if condition1 or condition2:
+            MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')
+            return
+
+        if self.email_entry.get().strip() == '':
+            pass
+        else:
+            import re
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", self.email_entry.get()):
+                MainWindow.__new__(MainWindow).unsuccessful_information('Invalid email address')
+                return
+
+        if not self.phone_entry.get().strip().isdigit() or len(self.phone_entry.get().strip()) != 10:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid phone number')
+            return
+
+        if self.gender_value.get() not in ['MALE', 'FEMALE']:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid gender')
+            return
+
+        if self.id_number_entry.get().strip() == '':
+            pass
+        else:
+            if not len(self.id_number_entry.get().strip()) == 14 or not self.id_number_entry.get().strip().isupper():
+                MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
+                return
+            
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+
+        if self.other_name_entry.get().strip():
+            customer_name = (
+                f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()} "
+                f"{self.other_name_entry.get().strip().upper()}")
+        else:
+            customer_name = f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()}"
+
+        try:
+            with open(self.new_passport_image_browsed, 'rb') as f:
+                photo = f.read()
+
+            if self.email_entry.get().strip() and not self.id_number_entry.get().strip():
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email=?, nin='Not Provided',"
+                         " district=? WHERE customer_id=?")
+
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.email_entry.get().strip(),
+                                       self.district_entry.get().strip().upper(), customer_data[0]))
+
+            elif not self.email_entry.get().strip() and self.id_number_entry.get().strip():
+
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email='Not Provided',"
+                         " nin=?, district=? WHERE customer_id=?")
+
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.id_number_entry.get().strip(),
+                                       self.district_entry.get().strip().upper(), customer_data[0]))
+
+            elif not self.email_entry.get().strip() and not self.id_number_entry.get().strip():
+                print('second phase')
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email='Not Provided',"
+                         " nin='Not Provided', district=? WHERE customer_id=?")
+
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.district_entry.get().strip().upper()
+                                       , customer_data[0]))
+
+            else:
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email=?, nin=?, district=? WHERE "
+                         "customer_id=?")
+                cursor.execute(query, (
+                    photo, customer_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
+                    self.email_entry.get().strip(), self.id_number_entry.get().strip(),
+                    self.district_entry.get().strip().upper(), customer_data[0]))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            MainWindow.__new__(MainWindow).success_information(f'Customer successfully updated.')
+            self.back_to_view_customers()
+        except Exception:
+            photo = bytes(customer_data[1])
+            change_format = Image.open(io.BytesIO(customer_data[1]))
+            self.customer_photo_label.configure(image=CTkImage(change_format, size=(125, 130)))
+            if self.email_entry.get().strip() and not self.id_number_entry.get().strip():
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email=?, nin='Not Provided',"
+                         " district=? WHERE customer_id=?")
+
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.email_entry.get().strip(),
+                                       self.district_entry.get().strip().upper(), customer_data[0]))
+
+            elif not self.email_entry.get().strip() and self.id_number_entry.get().strip():
+
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email='Not Provided',"
+                         " nin=?, district=? WHERE customer_id=?")
+
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.id_number_entry.get().strip(),
+                                       self.district_entry.get().strip().upper(), customer_data[0]))
+
+            elif not self.email_entry.get().strip() and not self.id_number_entry.get().strip():
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email='Not Provided',"
+                         " nin='Not Provided', district=? WHERE customer_id=?")
+
+                cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
+                                       self.phone_entry.get().strip(), self.district_entry.get().strip().upper()
+                                       , customer_data[0]))
+
+            else:
+                query = ("UPDATE customers SET photo=?, name=?, gender=?, phone=?, email=?, nin=?, district=? WHERE "
+                         "customer_id=?")
+                cursor.execute(query, (
+                    photo, customer_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
+                    self.email_entry.get().strip(), self.id_number_entry.get().strip(),
+                    self.district_entry.get().strip().upper(), customer_data[0]))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            MainWindow.__new__(MainWindow).success_information(f'Customer successfully updated.')
+            self.back_to_view_customers()
+
+    def update_photo(self):
+
+        try:
+            self.new_passport_image_browsed = filedialog.askopenfilename(title='Select student passport photo',
+                                                                filetypes=(
+                                                                    ('jpg files', '*.jpg'), ('png files', '*.png'),
+                                                                    ('All types', '*.*')))
+
+            current_current_passport = Image.open(self.new_passport_image_browsed)
+
+            circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
+            self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
+            self.previous_directory = self.new_passport_image_browsed
+        except AttributeError:
+            try:
+                self.new_passport_image_browsed = self.previous_directory
+            except AttributeError:
+                pass
+
+    def back_to_view_customers(self):
+        for widget in self.display_window.winfo_children()[2:]:
+            widget.destroy()
+        from view_customers import ViewCustomers
+        ViewCustomers(self.display_window)
+
+    def deleting_customer(self, customer_data):
+        confirm_deletion = messagebox.askyesno('Confirm deletion', f'Are you sure you want to \n'
+                                                f'permanently delete {customer_data[2].split()[-1]}',
+                                               parent=self.display_window)
+        if confirm_deletion:
             connection = sqlite3.connect('munange.db')
             cursor = connection.cursor()
+            cursor.execute(f"DELETE FROM customers WHERE customer_id='{customer_data[0]}'")
+            connection.commit()
+            cursor.close()
+            connection.close()
+            MainWindow.__new__(MainWindow).success_information(f'Customer successfully deleted.')
+            self.back_to_view_customers()
 
-            if self.other_name_entry.get():
-                customer_name = (f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()} "
-                                 f"{self.other_name_entry.get().strip().upper()}")
-            else:
-                customer_name = f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()}"
-            try:
-                with open(self.passport_image_browsed, 'rb') as f:
-                    photo = f.read()
-                if self.email_entry.get() and not self.id_number_entry.get():
-                    query = "INSERT INTO customers (photo, name, gender, phone, email, district) VALUES (?, ?, ?, ?, ?, ?)"
-                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
-                                           self.phone_entry.get().strip(), self.email_entry.get().strip(),
-                                           self.district_entry.get().strip().upper()))
 
-                elif not self.email_entry.get() and self.id_number_entry.get():
 
-                    query = "INSERT INTO customers (photo, name, gender, nin, district) VALUES (?, ?, ?, ?, ?)"
-                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
-                                           self.id_number_entry.get().strip(), self.district_entry.get().strip().upper()))
 
-                elif not self.email_entry.get() and not self.id_number_entry.get():
 
-                    query = "INSERT INTO customers (photo, name, gender, phone, district) VALUES (?, ?, ?, ?, ?)"
-                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
-                                           self.phone_entry.get().strip(), self.district_entry.get().strip().upper()))
 
-                else:
-                    query = "INSERT INTO customers (photo, name, gender, phone, email, nin, district) VALUES (?, ?, ?, ?, ?, ?, ?)"
-                    cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
-                                           self.email_entry.get().strip(), self.id_number_entry.get().strip(),
-                                           self.district_entry.get().strip().upper()))
-                connection.commit()
-                cursor.close()
-                connection.close()
-                MainWindow.__new__(MainWindow).success_information(f'Customer successfully registered.')
-                resetting_fields()
 
-            except AttributeError:
-                self.passport_image_browsed = 'images/default_photo.png'
-                self.saving_customer()
+
 
 
 

@@ -26,7 +26,10 @@ class Customers:
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:
                                         self.sliding(self.add_customers_button, self.add_customers))
         self.add_customers_button.pack(side=LEFT, padx=(0, 5))
-        self.sliding(self.add_customers_button, self.add_customers)
+
+        self.sliding(self.view_customers_button, self.view_customers)
+        # self.sliding(self.add_customers_button, self.add_customers)
+
     def view_customers(self):
         from view_customers import ViewCustomers
         ViewCustomers(self.display_window)
@@ -47,6 +50,7 @@ class Customers:
         button.configure(fg_color='#085f00')
 
         methods()
+
 
 
 
