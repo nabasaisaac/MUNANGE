@@ -136,8 +136,11 @@ class ViewCustomers:
             directory = filedialog.askdirectory(title='Select folder to save this file')
             if directory:
                 CustomerExcel(directory)
+                MainWindow.__new__(MainWindow).success_information('Customers file successfully saved.')
         else:
+            MainWindow.__new__(MainWindow).success_information('Loading....')
             CustomerExcel(False)
+
 
     def double_click(self, event):
         global row_double_click

@@ -479,6 +479,7 @@ class AddCustomers:
         if confirm_deletion:
             connection = sqlite3.connect('munange.db')
             cursor = connection.cursor()
+            cursor.execute("PRAGMA foreign_keys = ON")
             cursor.execute(f"DELETE FROM customers WHERE customer_id='{customer_data[0]}'")
             connection.commit()
             cursor.close()

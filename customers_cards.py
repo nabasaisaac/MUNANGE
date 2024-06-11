@@ -7,6 +7,7 @@ import webbrowser
 import tempfile
 import sys
 import os
+from main_window import MainWindow
 
 
 class CustomerExcel:
@@ -65,6 +66,7 @@ class CustomerExcel:
             wb.save(f'{directory}/All customers.xlsx')
 
         else:
+
             # Save the workbook to a BytesIO object
             file_stream = BytesIO()
             wb.save(file_stream)
@@ -75,3 +77,4 @@ class CustomerExcel:
 
             # Open the temporary file with the default application (Excel)
             webbrowser.open(f"file://{temp_file_path}")
+

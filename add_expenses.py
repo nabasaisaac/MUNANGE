@@ -135,7 +135,7 @@ class AddExpenses:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid year')
                 return
             else:
-                self.date_to_use = f'{self.day.get()}-{self.month_value.get()}-{self.year_value.get()}'
+                self.date_to_use = f'{int(self.day.get()):02d}-{self.month_value.get()}-{self.year_value.get()}'
 
         if self.item_name_entry.get().strip() == '' and self.item_amount_entry.get().strip() == '':
             MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')

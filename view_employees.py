@@ -136,7 +136,7 @@ class ViewEmployees:
             directory = filedialog.askdirectory(title='Select folder to save this file')
             if directory:
                 EmployeeExcel(directory)
-            MainWindow.__new__(MainWindow).success_information('Employees file successfully saved.')
+                MainWindow.__new__(MainWindow).success_information('Employees file successfully saved.')
         else:
             MainWindow.__new__(MainWindow).success_information('Loading....')
             EmployeeExcel(False)

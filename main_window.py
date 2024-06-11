@@ -68,7 +68,7 @@ class MainWindow:
                                      text='Repayments', font=('roboto', 15), compound=LEFT, anchor='w',
                                      image=CTkImage(Image.open('icons/repayments.png'), size=(20, 20)),
                                      border_color='#3BA541', border_width=1, command=lambda: self.sliding(self.repayments_button,
-                                     self.reports, self.display_frame))
+                                     self.repayments, self.display_frame))
 
         self.repayments_button.pack(side=TOP, padx=25)
 
@@ -98,8 +98,9 @@ class MainWindow:
         self.employees_button.pack(side=TOP, padx=25)
 
         # self.sliding(self.customers_button, self.customers, self.display_frame)
-
-        self.sliding(self.employees_button, self.employees, self.display_frame)
+        # self.sliding(self.employees_button, self.employees, self.display_frame)
+        # self.sliding(self.loans_button, self.loans, self.display_frame)
+        self.sliding(self.repayments_button, self.repayments, self.display_frame)
 
         self.logout_button = CTkButton(self.side_frame, bg_color='#3BA541', fg_color='#3BA541', corner_radius=15,
                                      width=150, height=40, hover_color='#2D9834', text_color='white',
@@ -112,10 +113,12 @@ class MainWindow:
         pass
 
     def loans(self, display_frame):
-        pass
+        from loans import Loans
+        Loans(display_frame)
 
     def repayments(self, display_frame):
-        pass
+        from repayments import Repayments
+        Repayments(display_frame)
 
     def customers(self, display_frame):
         from customers import Customers
@@ -310,22 +313,22 @@ class MainWindow:
 #     blurred_image.putalpha(alpha)
 #
 #     return blurred_image
-#
-# # Initialize the main window
+
+# Initialize the main window
 # root = CTk()
 #
 # # Path to your image
 # image_path = "images/munange_flier.jpg"
-#
-# # Process the image with blur and transparency
+
+# Process the image with blur and transparency
 # processed_img = process_image(image_path, blur_radius=7, transparency=150)
 #
 # # Convert to PhotoImage for use in Tkinter
 # background_photo = ImageTk.PhotoImage(processed_img)
-# # new = Image.open(background_photo)
+# new = Image.open(background_photo)
 # # Create a label and set the processed image as the background
 # label = CTkLabel(root, text="WELCOME BACK KAPALAGA JIMMY, ", image=CTkImage(processed_img, size=(500, 500)), font=('roboto', 20))
 # label.pack(fill="both", expand=True)
 #
-# # Run the main loop
+# Run the main loop
 # root.mainloop()
