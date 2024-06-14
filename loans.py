@@ -30,8 +30,8 @@ class Loans:
         self.add_loan_button.pack(side=LEFT, padx=(0, 5))
 
         """Initial opening here """
-        # self.sliding(self.view_borrowers_button, self.view_borrowers)
-        self.sliding(self.add_loan_button, self.add_borrowers)
+        self.sliding(self.view_borrowers_button, self.view_borrowers)
+        # self.sliding(self.add_loan_button, self.add_borrowers)
 
     def view_borrowers(self):
         from view_borrowers import ViewBorrowers

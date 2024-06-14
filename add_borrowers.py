@@ -345,6 +345,7 @@ class AddBorrowers:
 
             self.date_to_use = f'{day}-{month}-{year}'
 
+
         else:
             if self.day.get() == '':
                 MainWindow.__new__(MainWindow).unsuccessful_information('Please enter day')
@@ -362,7 +363,7 @@ class AddBorrowers:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid year')
                 return
             else:
-                self.date_to_use = f'{self.day.get()}-{self.month_value.get()}-{self.year_value.get()}'
+                self.date_to_use = f'{int(self.day.get()):02d}-{self.month_value.get()}-{self.year_value.get()}'
 
         if not self.access_entry.get().strip() or not self.amount_entry.get().strip():
             MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')

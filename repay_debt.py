@@ -199,7 +199,7 @@ class RepayDebt:
                      "JOIN loans ON customers.customer_id=loans.customer_no WHERE customer_id=? AND loans.status='on going'")
             customer_id = f'{self.access_entry.get().strip()}'
             cursor.execute(query, (customer_id, ))
-            global customer_info
+            global customer_info, deadline_date
             customer_info = cursor.fetchone()
 
             cursor.execute("SELECT amount, date FROM payments WHERE payment_id=?", (customer_info[2], ))
@@ -214,32 +214,47 @@ class RepayDebt:
             deadline = customer_info[5]
             current_date = datetime.strptime(current, '%d-%b-%Y')
             deadline_date = datetime.strptime(deadline, '%d-%b-%Y')
-            remaining_days = str(deadline_date - current_date).split(',')[0]
+            if current_date >= deadline_date:
+                remaining_days = '0'
+            else:
+                remaining_days = str(deadline_date - current_date).split(',')[0]
 
             # working_with_getting_missed_days
             loan_date = customer_info[3]
 
             days_list = []
-            for day in range(30-int(remaining_days.split()[0])-1):
-                loan_taken_date = datetime.strptime(loan_date, '%d-%b-%Y')
-                delta = timedelta(days=1)
-                date_ = loan_taken_date + delta
-                day = date_.strftime("%d")
-                month = date_.strftime("%b")
-                year = date_.strftime("%Y")
-                days_list.append(f'{day}-{month}-{year}')
-                loan_date = f'{day}-{month}-{year}'
+            if current_date >= deadline_date:
+                for day in range(30 - int(remaining_days.split()[0])):
+                    loan_taken_date = datetime.strptime(loan_date, '%d-%b-%Y')
+                    delta = timedelta(days=1)
+                    date_ = loan_taken_date + delta
+                    day = date_.strftime("%d")
+                    month = date_.strftime("%b")
+                    year = date_.strftime("%Y")
+                    days_list.append(f'{day}-{month}-{year}')
+                    loan_date = f'{day}-{month}-{year}'
+            else:
+                for day in range(30 - int(remaining_days.split()[0]) - 1):
+                    loan_taken_date = datetime.strptime(loan_date, '%d-%b-%Y')
+                    delta = timedelta(days=1)
+                    date_ = loan_taken_date + delta
+                    day = date_.strftime("%d")
+                    month = date_.strftime("%b")
+                    year = date_.strftime("%Y")
+                    days_list.append(f'{day}-{month}-{year}')
+                    loan_date = f'{day}-{month}-{year}'
 
-            paid_days = []
+            # print(days_list)
+            self.paid_days = []
             current_amount = 0
             try:
                 for payment in payments_info:
                     current_amount += int(payment[0])
-                    paid_days.append(payment[1])
+                    self.paid_days.append(payment[1])
             except IndexError:
                 pass
 
-            missed_days = list(days for days in days_list if days not in paid_days)
+            missed_days = list(days for days in days_list if days not in self.paid_days)
 
             outstanding_balance = int(customer_info[4]) - current_amount
 
@@ -252,7 +267,10 @@ class RepayDebt:
             self.loan_amount_label.configure(text=f'{customer_info[4]}')
             self.balance_label.configure(text=f'{outstanding_balance}')
             self.daily_payment_label.configure(text=f'{self.daily_payment}')
-            self.days_deadline_label.configure(text=f'{remaining_days}')
+            if current_date > deadline_date:
+                self.days_deadline_label.configure(text=f'Passed deadline')
+            else:
+                self.days_deadline_label.configure(text=f'{remaining_days}')
             if len(missed_days) == 0:
                 self.missed_days_label.configure(text=f'{len(missed_days)}', text_color='#344767')
             else:
@@ -290,8 +308,8 @@ class RepayDebt:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid year')
                 return
             else:
-                self.repay_date = f'{self.day.get()}-{self.month_value.get()}-{self.year_value.get()}'
-
+                self.repay_date = f'{int(self.day.get()):02d}-{self.month_value.get()}-{self.year_value.get()}'
+                # print(self.repay_date)
         if not self.access_entry.get().strip() or not self.amount_entry.get().strip():
             MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')
             return
@@ -304,6 +322,41 @@ class RepayDebt:
         elif int(self.amount_entry.get().strip()) > self.daily_payment:
             MainWindow.__new__(MainWindow).unsuccessful_information('Amount exceeds daily payment')
             return
+        elif datetime.strptime(self.repay_date, '%d-%b-%Y') > deadline_date:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Date is out of loan period')
+            return
+        elif datetime.strptime(self.repay_date, '%d-%b-%Y') < datetime.strptime(customer_info[3], '%d-%b-%Y'):
+            MainWindow.__new__(MainWindow).unsuccessful_information('Date is out of loan period')
+            return
+        else:
+            connection = sqlite3.connect('munange.db')
+            cursor = connection.cursor()
+            # print(self.paid_days)
+            if self.repay_date in self.paid_days:
+                cursor.execute('SELECT amount FROM payments WHERE payment_id=? AND date=?',
+                               (customer_info[2], self.repay_date))
+                amount_that_day = int(cursor.fetchone()[0])
 
+                new_amount_that_day = amount_that_day + int(self.amount_entry.get().strip())
+                if new_amount_that_day > self.daily_payment:
+                    MainWindow.__new__(MainWindow).unsuccessful_information('New amount exceeds daily payment')
+                else:
+                    cursor.execute('UPDATE payments SET amount=? WHERE payment_id=? AND date=?',
+                                   (new_amount_that_day, customer_info[2], self.repay_date))
+                    connection.commit()
+                    MainWindow.__new__(MainWindow).success_information('Payment successfully updated')
+                    self.showing_borrowers_info(None)
+                    cursor.close()
+                    connection.close()
+                    # self.amount_entry.delete(0, END)
+                    return
+                return
 
+        cursor.execute('INSERT INTO payments VALUES(?, ?, ?)',
+                       (customer_info[2], self.amount_entry.get().strip(), self.repay_date))
+        connection.commit()
+        MainWindow.__new__(MainWindow).success_information('Payment successfully received')
+        self.showing_borrowers_info(None)
+        cursor.close()
+        connection.close()
 
