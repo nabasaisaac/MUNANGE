@@ -141,7 +141,6 @@ class ViewCustomers:
             MainWindow.__new__(MainWindow).success_information('Loading....')
             CustomerExcel(False)
 
-
     def double_click(self, event):
         global row_double_click
         row_double_click = customers_tree.identify_row(event.y)

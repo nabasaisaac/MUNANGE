@@ -5,6 +5,7 @@ from PIL import ImageTk, Image
 from main_window import MainWindow
 from tkinter import messagebox
 
+
 class AddCustomers:
     def __init__(self, display_window):
         self.display_window = display_window
@@ -35,7 +36,7 @@ class AddCustomers:
 
         self.upload_photo_button = CTkButton(self.side_frame, bg_color='white', fg_color='#0C2844', font=('roboto', 15),
                                              text='Upload photo', text_color='white', hover_color='#032F5B',
-                                             command=self.uploading_photo)
+                                             text_color_disabled='white', command=self.uploading_photo)
         self.upload_photo_button.pack(pady=(0, 15))
 
         self.note_label = CTkLabel(self.side_frame, bg_color='white', fg_color='white', text='WARNING',
@@ -57,8 +58,9 @@ class AddCustomers:
 
         second_frame = CTkFrame(two_frames_holder, fg_color='white', bg_color='white')
         second_frame.pack(side=LEFT, fill=BOTH, padx=(0, 20), pady=20, expand=True)
-        CTkLabel(first_frame, bg_color='white', fg_color='white', text='Basic Information',
-                text_color='#0C2844', font=('roboto', 16, 'bold'), justify=LEFT, anchor='w').pack(fill=X, pady=(0, 10))
+        self.basic_infor_label = CTkLabel(first_frame, bg_color='white', fg_color='white', text='Basic Information',
+                text_color='#0C2844', font=('roboto', 16, 'bold'), justify=LEFT, anchor='w')
+        self.basic_infor_label.pack(fill=X, pady=(0, 10))
 
         CTkLabel(first_frame, bg_color='white', fg_color='white', text='Surname',
                  text_color='#0C2844', font=('roboto', 15), justify=LEFT, anchor='w').pack(fill=X)
@@ -252,6 +254,7 @@ class AddCustomers:
             self.saving_customer()
 
     def updating_customer(self, window, customer_data):
+        self.customer_data = customer_data
         for widget in window.winfo_children()[2:]:
             widget.destroy()
         self.display_window = window
@@ -288,7 +291,24 @@ class AddCustomers:
                                     text='Back', text_color='white', compound=LEFT,
                                     image=CTkImage(Image.open('icons/back_image.png')), width=20,
                                     command=self.back_to_view_customers)
-        self.back_button.pack(side=BOTTOM, pady=(0, 10))
+        self.back_button.pack(side=LEFT, pady=(0, 10), padx=(20, 0))
+        self.guarantor = CTkButton(self.side_frame, bg_color='white', fg_color='#b7c1d1', font=('roboto', 15),
+                                    text='', text_color='#0C2844', compound=LEFT, hover_color='#98a6bd',
+                                    image=CTkImage(Image.open('icons/guarantor.png')), width=20)
+                                    # command=self.back_to_view_customers)
+        self.guarantor.pack(side=RIGHT, pady=(0, 10), padx=(0, 20))
+
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM guarantors WHERE guarantor_id=?", (customer_data[0],))
+        guarantor_details = cursor.fetchone()
+        # print(guarantor_details)
+        if not guarantor_details:
+            self.guarantor.configure(text='Add Guarantor', command=lambda: self.add_guarantor(customer_data))
+        else:
+            self.guarantor.configure(text='View Guarantor', command=lambda: self.view_guarantor(guarantor_details))
+        cursor.close()
+        connection.close()
 
         if len(customer_data[2].split()) >= 3:
             self.sur_name_entry.insert(0, customer_data[2].split()[0])
@@ -316,7 +336,6 @@ class AddCustomers:
                                     text='Delete', text_color='white', compound=LEFT, width=100, hover_color='#ff3f3f',
                                     image=CTkImage(Image.open('icons/DELETE.png'), size=(15, 15)),
                                     command=lambda: self.deleting_customer(customer_data))
-
         self.delete_button.pack(side=RIGHT, padx=(0, 15))
 
         self.upload_photo_button.configure(text='Change Image', command=self.update_photo)
@@ -487,7 +506,224 @@ class AddCustomers:
             MainWindow.__new__(MainWindow).success_information(f'Customer successfully deleted.')
             self.back_to_view_customers()
 
+    def emptying_data_fields(self):
+        self.upload_photo_button.configure(state=DISABLED)
+        # self.basic_infor_label.configure(text='Add a guarantor')
+        self.sur_name_entry.delete(0, END)
+        self.first_name_entry.delete(0, END)
+        self.other_name_entry.delete(0, END)
+        self.phone_entry.delete(0, END)
+        self.email_entry.delete(0, END)
+        self.id_number_entry.delete(0, END)
+        self.district_entry.delete(0, END)
+        self.gender_value.set('Select')
+        # self.delete_button.pack_forget()
+        # self.save_button.configure(text='Save', command=lambda : self.save_guarantor(customer_data))
+        self.phone_entry.focus_set()
+        self.email_entry.focus_set()
+        self.id_number_entry.focus_set()
+        self.sur_name_entry.focus_set()
 
+    def add_guarantor(self, customer_data):
+        self.emptying_data_fields()
+        self.basic_infor_label.configure(text='Add a guarantor')
+        self.delete_button.pack_forget()
+        self.save_button.configure(text='Save', command=lambda : self.save_guarantor(customer_data))
+
+    def save_guarantor(self, customer_data):
+        condition1 = self.first_name_entry.get().strip() == '' or self.sur_name_entry.get().strip() == ''
+        condition2 = (self.phone_entry.get().strip() == '' or self.gender_value.get().strip() == 'Select' or
+                      self.district_entry.get().strip() == '')
+        if condition1 or condition2:
+            MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')
+            return
+
+        if self.email_entry.get().strip() == '':
+            pass
+        else:
+            import re
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", self.email_entry.get()):
+                MainWindow.__new__(MainWindow).unsuccessful_information('Invalid email address')
+                return
+
+        if not self.phone_entry.get().strip().isdigit() or len(self.phone_entry.get().strip()) != 10:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid phone number')
+            return
+
+        if not self.gender_value.get() in ['MALE', 'FEMALE']:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid gender')
+            return
+        if self.id_number_entry.get().strip() == '':
+            pass
+        else:
+            if not len(self.id_number_entry.get().strip()) == 14 or not self.id_number_entry.get().strip().isupper():
+                MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
+                return
+
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+
+        if self.other_name_entry.get():
+            guarantor_name = (
+                f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()} "
+                f"{self.other_name_entry.get().strip().upper()}")
+        else:
+            guarantor_name = f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()}"
+        guarantor_id = customer_data[0]
+        if self.email_entry.get() and not self.id_number_entry.get():
+            query = "INSERT INTO guarantors (guarantor_id, name, gender, phone, email, district) VALUES (?, ?, ?, ?, ?, ?)"
+            cursor.execute(query, (guarantor_id, guarantor_name, self.gender_value.get().upper(),
+                                   self.phone_entry.get().strip(), self.email_entry.get().strip(),
+                                   self.district_entry.get().strip().upper()))
+
+        elif not self.email_entry.get() and self.id_number_entry.get():
+
+            query = "INSERT INTO guarantors (guarantor_id, name, gender, nin, district) VALUES (?, ?, ?, ?, ?)"
+            cursor.execute(query, (guarantor_id, guarantor_name, self.gender_value.get().upper(),
+                                   self.id_number_entry.get().strip(), self.district_entry.get().strip().upper()))
+
+        elif not self.email_entry.get() and not self.id_number_entry.get():
+
+            query = "INSERT INTO guarantors (guarantor_id, name, gender, phone, district) VALUES (?, ?, ?, ?, ?)"
+            cursor.execute(query, (guarantor_id, guarantor_name, self.gender_value.get().upper(),
+                                   self.phone_entry.get().strip(), self.district_entry.get().strip().upper()))
+
+        else:
+            query = "INSERT INTO guarantors (guarantor_id, name, gender, phone, email, nin, district) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            cursor.execute(query,
+                           (guarantor_id, guarantor_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
+                            self.email_entry.get().strip(), self.id_number_entry.get().strip(),
+                            self.district_entry.get().strip().upper()))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        self.updating_customer(self.display_window, self.customer_data)
+        MainWindow.__new__(MainWindow).success_information(f'Guarantor successfully registered.')
+        # self.add_guarantor(customer_data)
+
+    def view_guarantor(self, guarantor_data):
+        self.emptying_data_fields()
+        self.basic_infor_label.configure(text='Guarantor Basic Information')
+        self.save_button.configure(text='Update', command=lambda: self.update_guarantor(guarantor_data))
+        self.delete_button.configure(command=lambda: self.deleting_guarantor(guarantor_data))
+        # self.delete_button = CTkButton(self.save_frame, bg_color='white', fg_color='#ff5c5c', font=('roboto', 15),
+        #                             text='Delete', text_color='white', compound=LEFT, width=100, hover_color='#ff3f3f',
+        #                             image=CTkImage(Image.open('icons/DELETE.png'), size=(15, 15)),
+        #                             command=lambda: self.deleting_guarantor(guarantor_data))
+        #
+        # self.delete_button.pack(side=RIGHT, padx=(0, 15))
+
+        if len(guarantor_data[1].split()) >= 3:
+            self.sur_name_entry.insert(0, guarantor_data[1].split()[0])
+            self.first_name_entry.insert(0, guarantor_data[1].split()[1])
+            self.other_name_entry.insert(0, guarantor_data[1].split()[2::])
+        else:
+            self.sur_name_entry.insert(0, guarantor_data[1].split()[0])
+            self.first_name_entry.insert(0, guarantor_data[1].split()[1])
+        self.phone_entry.insert(0, guarantor_data[3])
+        self.gender_value.set(guarantor_data[2])
+        if guarantor_data[4] == 'Not Provided':
+            # self.email_entry.configure(placeholder_text_color='example@gmail.com')
+            pass
+        else:
+            self.email_entry.insert(0, guarantor_data[4])
+        if guarantor_data[5] == 'Not Provided':
+            # self.id_number_entry.configure(placeholder_text_color="Customer's NIN")
+            pass
+        else:
+            self.id_number_entry.insert(0, guarantor_data[5])
+
+        self.district_entry.insert(0, guarantor_data[6])
+
+    def update_guarantor(self, guarantor_data):
+        condition1 = self.first_name_entry.get().strip() == '' or self.sur_name_entry.get().strip() == ''
+        condition2 = (self.phone_entry.get().strip() == '' or self.gender_value.get().strip() == 'Select' or
+                      self.district_entry.get().strip() == '')
+        if condition1 or condition2:
+            MainWindow.__new__(MainWindow).unsuccessful_information('All fields are required')
+            return
+
+        if self.email_entry.get().strip() == '':
+            pass
+        else:
+            import re
+            if not re.match(r"[^@]+@[^@]+\.[^@]+", self.email_entry.get()):
+                MainWindow.__new__(MainWindow).unsuccessful_information('Invalid email address')
+                return
+
+        if not self.phone_entry.get().strip().isdigit() or len(self.phone_entry.get().strip()) != 10:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid phone number')
+            return
+
+        if not self.gender_value.get() in ['MALE', 'FEMALE']:
+            MainWindow.__new__(MainWindow).unsuccessful_information('Invalid gender')
+            return
+        if self.id_number_entry.get().strip() == '':
+            pass
+        else:
+            if not len(self.id_number_entry.get().strip()) == 14 or not self.id_number_entry.get().strip().isupper():
+                MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
+                return
+
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+
+        if self.other_name_entry.get():
+            guarantor_name = (
+                f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()} "
+                f"{self.other_name_entry.get().strip().upper()}")
+        else:
+            guarantor_name = f"{self.sur_name_entry.get().strip().upper()} {self.first_name_entry.get().strip().upper()}"
+        guarantor_id = guarantor_data[0]
+        # print(guarantor_id)
+        if self.email_entry.get() and not self.id_number_entry.get():
+            query = "UPDATE guarantors SET name=?, gender=?, phone=?, email=?, nin='Not Provided', district=? WHERE guarantor_id=?"
+            cursor.execute(query, (guarantor_name, self.gender_value.get().upper(),
+                                   self.phone_entry.get().strip(), self.email_entry.get().strip(),
+                                   self.district_entry.get().strip().upper(), guarantor_id))
+
+        elif not self.email_entry.get() and self.id_number_entry.get():
+
+            query = "UPDATE guarantors SET name=?, gender=?, email='Not Provided', nin=?, district=? WHERE guarantor_id=?"
+            cursor.execute(query, (guarantor_name, self.gender_value.get().upper(),
+                                   self.id_number_entry.get().strip(), self.district_entry.get().strip().upper(), guarantor_id))
+
+        elif not self.email_entry.get() and not self.id_number_entry.get():
+
+            query = "UPDATE guarantors SET name=?, gender=?, email='Not Provided', nin='Not Provided', phone=?, district=? WHERE guarantor_id=?"
+            cursor.execute(query, (guarantor_name, self.gender_value.get().upper(),
+                                   self.phone_entry.get().strip(), self.district_entry.get().strip().upper(), guarantor_id))
+
+        else:
+            query = "UPDATE guarantors SET name=?, gender=?, phone=?, email=?, nin=?, district=? WHERE guarantor_id=?"
+            cursor.execute(query,
+                           (guarantor_name, self.gender_value.get().upper(),
+                            self.phone_entry.get().strip(), self.email_entry.get().strip(), self.id_number_entry.get().strip(),
+                            self.district_entry.get().strip().upper(), guarantor_id))
+        connection.commit()
+
+        cursor.execute("SELECT * FROM guarantors WHERE guarantor_id=?", (guarantor_id, ))
+        guarantor_details = cursor.fetchone()
+        cursor.close()
+        connection.close()
+        self.view_guarantor(guarantor_details)
+        MainWindow.__new__(MainWindow).success_information(f'Guarantor successfully updated.')
+
+    def deleting_guarantor(self, guarantor_data):
+        confirm_deletion = messagebox.askyesno('Delete Guarantor', f'Are you sure you want to delete '
+                                                f'{guarantor_data[1].split()[1]}\nas a guarantor?', parent=self.display_window)
+        if confirm_deletion:
+            connection = sqlite3.connect('munange.db')
+            cursor = connection.cursor()
+            cursor.execute("DELETE FROM guarantors WHERE guarantor_id=?", (guarantor_data[0],))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            self.updating_customer(self.display_window, self.customer_data)
+            MainWindow.__new__(MainWindow).success_information(f'Guarantor successfully deleted.')
+
+        else:
+            pass
 
 
 

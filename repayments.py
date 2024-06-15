@@ -15,7 +15,7 @@ class Repayments:
                                             )
         self.upper_buttons_frame.pack(fill=X)
 
-        self.repay_debt_button = CTkButton(self.upper_buttons_frame, text='Clear debt', text_color='white',
+        self.repay_debt_button = CTkButton(self.upper_buttons_frame, text='Clear Debt', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
                                         font=('roboto', 15), image=CTkImage(Image.open('icons/grant_loan.png'),
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:
@@ -23,6 +23,7 @@ class Repayments:
         self.repay_debt_button.pack(side=LEFT)
 
         self.sliding(self.repay_debt_button, self.repay_debt)
+
     def repay_debt(self):
         from repay_debt import RepayDebt
         RepayDebt(self.display_window)

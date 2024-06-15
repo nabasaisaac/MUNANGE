@@ -22,7 +22,7 @@ class Loans:
                                         self.sliding(self.view_borrowers_button, self.view_borrowers))
         self.view_borrowers_button.pack(side=LEFT)
 
-        self.add_loan_button = CTkButton(self.upper_buttons_frame, text='Grant loan', text_color='white',
+        self.add_loan_button = CTkButton(self.upper_buttons_frame, text='Grant Loan', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
                                         font=('roboto', 15), image=CTkImage(Image.open('icons/grant_loan.png'),
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:

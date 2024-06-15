@@ -13,7 +13,7 @@ class Customers:
                                             )
         self.upper_buttons_frame.pack(fill=X)
 
-        self.view_customers_button = CTkButton(self.upper_buttons_frame, text='View customers', text_color='white',
+        self.view_customers_button = CTkButton(self.upper_buttons_frame, text='View Customers', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
                                         font=('roboto', 15), image=CTkImage(Image.open('icons/view_customers.png'),
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:

@@ -41,9 +41,21 @@ class MainWindow:
         circular_image = self.make_circular_image(image)
         self.profile_button = CTkButton(upper_frame, bg_color='#e9edf2', fg_color='#e9edf2', compound=RIGHT,
                                         image=CTkImage(circular_image, size=(50, 50)), text='NABASA ISAAC\nnabasaisaac',
-                                        text_color='#172b4c', font=('roboto', 15), hover_color='#e9edf2')
+                                        text_color='#172b4c', font=('roboto', 15), hover_color='#e9edf2',
+                                        command=lambda: self.sliding(self.profile_button, self.profile,
+                                                                     self.display_frame))
 
         self.profile_button.pack(side=RIGHT, padx=(10, 15))
+
+        self.language_button = CTkButton(upper_frame, bg_color='#e9edf2', fg_color='white', compound=LEFT, width=100,
+                                        image=CTkImage(Image.open('images/english.png'), size=(15, 10)), text='English',
+                                        text_color='#172b4c', font=('roboto', 15), hover_color='#e9edf2', height=40)
+
+        self.language_button.pack(side=RIGHT, padx=(10, 5))
+        self.language_button.bind('<Enter>', lambda event: self.language_button.configure(text_color='#44aaee',
+                                                                                          fg_color='#e9edf2'))
+        self.language_button.bind('<Leave>', lambda event: self.language_button.configure(text_color='#172b4c',
+                                                                                          fg_color='white'))
 
         self.dashboard_button = CTkButton(self.side_frame, bg_color='#3BA541', fg_color='#3BA541', corner_radius=15,
                                      width=150, height=40, hover_color='#2D9834', text_color='white',
@@ -97,7 +109,8 @@ class MainWindow:
                                      self.employees, self.display_frame))
         self.employees_button.pack(side=TOP, padx=25)
 
-        self.sliding(self.loans_button, self.loans, self.display_frame)
+        self.sliding(self.profile_button, self.profile, self.display_frame)
+        # self.sliding(self.loans_button, self.loans, self.display_frame)
         # self.sliding(self.customers_button, self.customers, self.display_frame)
         # self.sliding(self.employees_button, self.employees, self.display_frame)
         # self.sliding(self.loans_button, self.loans, self.display_frame)
@@ -109,6 +122,10 @@ class MainWindow:
                                      image=CTkImage(Image.open('icons/logout.png'), size=(20, 20)),
                                     )
         self.logout_button.pack(side=BOTTOM, padx=25, pady=10)
+
+    def profile(self, display_frame):
+        from profile import Profile
+        Profile(display_frame)
 
     def dashboard(self, display_frame):
         pass
@@ -196,7 +213,7 @@ class MainWindow:
             else:  # If y is 0.4 or more, stop animation
                 correct_input.place(relx=0.5, rely=y)  # Ensure the label is placed
                 # destroying_label()
-                upper_frame.after(1500, destroying_label)
+                upper_frame.after(2000, destroying_label)
 
         correct_input = CTkLabel(upper_frame, text=f'   {info}  ', text_color='#3BA541', bg_color='#e9edf2',
                                  fg_color='white', corner_radius=5, width=70, height=45, compound=LEFT,

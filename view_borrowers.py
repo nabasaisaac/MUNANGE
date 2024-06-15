@@ -103,7 +103,7 @@ class ViewBorrowers:
 
         cursor.execute(query)
         self.borrowers = cursor.fetchall()
-        print(self.borrowers)
+        # print(self.borrowers)
 
         count = 0
         for borrower in self.borrowers:
