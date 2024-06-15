@@ -185,7 +185,11 @@ class BorrowerDetails:
         """issue here"""
         if current_date > deadline_date:
             remaining_days = f'PASSED DEADLINE ({-1*int(str(deadline_date - current_date).split()[0])} DAYS)'
-            # print(remaining_days)
+            if int(self.borrower_data[5]) == 0:
+                remaining_days = 'CLOSED'
+            else:
+                pass
+
         CTkLabel(right_frame, text=f'{remaining_days}', text_color='#344767', bg_color='white', width=200,
                  justify=LEFT, anchor='w', height=20).pack()
 
@@ -218,7 +222,7 @@ class BorrowerDetails:
 
         cursor.execute(f"SELECT date, amount FROM payments WHERE payment_id=?", (customer_info[2], ))
         payments = cursor.fetchall()
-        payments.reverse()
+        # payments.reverse()
 
         for count, payment in enumerate(payments, start=1):
             fg_color = 'gray98' if count % 2 != 0 else 'white'
@@ -282,6 +286,10 @@ class BorrowerDetails:
         MainWindow.__new__(MainWindow).success_information('Loading student statement ...')
         if current_date > deadline_date:
             remaining_days = f'PASSED DEADLINE ({-1*int(str(deadline_date - current_date).split()[0])} DAYS)'
+            if int(self.borrower_data[5]) == 0:
+                remaining_days = 'CLOSED'
+            else:
+                pass
 
         BorrowerStatement(False, photo, self.borrower_data, loan_date, payments_info, len(missed_days),
                           remaining_days)

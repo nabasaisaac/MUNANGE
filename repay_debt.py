@@ -195,8 +195,9 @@ class RepayDebt:
 
             connection = sqlite3.connect('munange.db')
             cursor = connection.cursor()
-            query = ("SELECT customers.photo, customers.name, loans.loan_id, loans.loan_date, loans.amount, loans.loan_deadline FROM customers "
-                     "JOIN loans ON customers.customer_id=loans.customer_no WHERE customer_id=? AND loans.status='on going'")
+            query = ("SELECT customers.photo, customers.name, loans.loan_id, loans.loan_date, loans.amount, "
+                     "loans.loan_deadline, loans.balance FROM customers JOIN loans ON customers.customer_id="
+                     "loans.customer_no WHERE customer_id=? AND loans.status='on going'")
             customer_id = f'{self.access_entry.get().strip()}'
             cursor.execute(query, (customer_id, ))
             global customer_info, deadline_date
@@ -246,17 +247,16 @@ class RepayDebt:
 
             # print(days_list)
             self.paid_days = []
-            current_amount = 0
+
             try:
                 for payment in payments_info:
-                    current_amount += int(payment[0])
                     self.paid_days.append(payment[1])
             except IndexError:
                 pass
 
             missed_days = list(days for days in days_list if days not in self.paid_days)
 
-            outstanding_balance = int(customer_info[4]) - current_amount
+            outstanding_balance = int(customer_info[6])
 
             self.daily_payment = (int(customer_info[4]) + int(customer_info[4]) * 0.2) / 30
             image = Image.open(io.BytesIO(customer_info[0]))
@@ -325,13 +325,14 @@ class RepayDebt:
         elif datetime.strptime(self.repay_date, '%d-%b-%Y') > deadline_date:
             MainWindow.__new__(MainWindow).unsuccessful_information('Date is out of loan period')
             return
-        elif datetime.strptime(self.repay_date, '%d-%b-%Y') < datetime.strptime(customer_info[3], '%d-%b-%Y'):
+        elif datetime.strptime(self.repay_date, '%d-%b-%Y') <= datetime.strptime(customer_info[3], '%d-%b-%Y'):
             MainWindow.__new__(MainWindow).unsuccessful_information('Date is out of loan period')
             return
         else:
             connection = sqlite3.connect('munange.db')
             cursor = connection.cursor()
-            # print(self.paid_days)
+
+            new_balance = int(customer_info[6]) - int(self.amount_entry.get().strip())
             if self.repay_date in self.paid_days:
                 cursor.execute('SELECT amount FROM payments WHERE payment_id=? AND date=?',
                                (customer_info[2], self.repay_date))
@@ -341,8 +342,10 @@ class RepayDebt:
                 if new_amount_that_day > self.daily_payment:
                     MainWindow.__new__(MainWindow).unsuccessful_information('New amount exceeds daily payment')
                 else:
+                    print('am seeing it')
                     cursor.execute('UPDATE payments SET amount=? WHERE payment_id=? AND date=?',
                                    (new_amount_that_day, customer_info[2], self.repay_date))
+                    cursor.execute("UPDATE loans SET balance=? WHERE loan_id=?", (new_balance, customer_info[2]))
                     connection.commit()
                     MainWindow.__new__(MainWindow).success_information('Payment successfully updated')
                     self.showing_borrowers_info(None)
@@ -352,8 +355,12 @@ class RepayDebt:
                     return
                 return
 
+            if int(self.amount_entry.get()) > self.daily_payment:
+                MainWindow.__new__(MainWindow).unsuccessful_information('Amount exceeds daily payment')
+                return
         cursor.execute('INSERT INTO payments VALUES(?, ?, ?)',
                        (customer_info[2], self.amount_entry.get().strip(), self.repay_date))
+        cursor.execute("UPDATE loans SET balance=? WHERE loan_id=?", (new_balance, customer_info[2]))
         connection.commit()
         MainWindow.__new__(MainWindow).success_information('Payment successfully received')
         self.showing_borrowers_info(None)

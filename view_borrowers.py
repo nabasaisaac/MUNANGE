@@ -86,7 +86,7 @@ class ViewBorrowers:
 
         customers_tree.pack(fill=BOTH, expand=True, pady=5, padx=5)
         query = ("SELECT customers.customer_id, customers.name, customers.gender, loans.loan_id, loans.amount, loans.loan_date, "
-                 "loans.loan_deadline FROM customers JOIN loans ON customers.customer_id = loans.customer_no WHERE "
+                 "loans.loan_deadline, loans.balance FROM customers JOIN loans ON customers.customer_id = loans.customer_no WHERE "
                  "loans.status='on going' ORDER BY name ASC")
         self.showing_borrowers_in_tree(query)
         customers_tree.bind('<Double-1>', lambda event: self.double_click(event))
@@ -102,11 +102,11 @@ class ViewBorrowers:
         cursor = connection.cursor()
 
         cursor.execute(query)
-        borrowers = cursor.fetchall()
-        # print(borrowers)
+        self.borrowers = cursor.fetchall()
+        print(self.borrowers)
 
         count = 0
-        for borrower in borrowers:
+        for borrower in self.borrowers:
             # cursor.execute(query, (customer_id, ))
             # global customer_info, deadline_date
             # customer_info = cursor.fetchone()
@@ -156,18 +156,22 @@ class ViewBorrowers:
 
             # print(days_list)
             self.paid_days = []
-            current_amount = 0
+            # current_amount = 0
             try:
                 for payment in payments_info:
-                    current_amount += int(payment[0])
+                    # current_amount += int(payment[0])
                     self.paid_days.append(payment[1])
             except IndexError:
                 pass
 
-            missed_days = list(days for days in days_list if days not in self.paid_days)
-            outstanding_balance = (int(borrower[4]) - current_amount) + int(borrower[4]) * 0.2
+            # missed_days = list(days for days in days_list if days not in self.paid_days)
+            outstanding_balance = int(borrower[7])
             if current_date > deadline_date:
                 remaining_days = 'Passed deadline'
+                if outstanding_balance == 0:
+                    remaining_days = 'CLOSED'
+                else:
+                    pass
 
             my_tag = 'color1' if my_tag == 'color2' else 'color2'
             if remaining_days == 'Passed deadline':
@@ -179,11 +183,11 @@ class ViewBorrowers:
 
         cursor.close()
         connection.close()
-        return len(borrowers)
+        return len(self.borrowers)
 
     def searching_for_borrowers(self, event):
         query = (f"SELECT customers.customer_id, customers.name, customers.gender, loans.loan_id, loans.amount, loans.loan_date, "
-                 "loans.loan_deadline FROM customers JOIN loans ON customers.customer_id = loans.customer_no WHERE "
+                 "loans.loan_deadline, loans.balance FROM customers JOIN loans ON customers.customer_id = loans.customer_no WHERE "
                  f"loans.status='on going' AND customers.name LIKE '%{self.search_borrowers_entry.get().strip()}%'"
                  f" ORDER BY name ASC")
         borrowers_no = self.showing_borrowers_in_tree(query)
@@ -209,8 +213,8 @@ class ViewBorrowers:
         # print(customers_data)
         if row_double_click:
             from borrower_details import BorrowerDetails
-            connection = sqlite3.connect('munange.db')
-            cursor = connection.cursor()
+            # connection = sqlite3.connect('munange.db')
+            # cursor = connection.cursor()
             # customer_id = customer_info[0]
             # cursor.execute(f"SELECT * FROM customers WHERE customer_id='{customer_id}'")
             # customers_data = cursor.fetchone()

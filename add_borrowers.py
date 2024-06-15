@@ -261,6 +261,7 @@ class AddBorrowers:
             self.email.configure(text='None')
 
     def amount_to_borrow(self, event):
+        global pay_back_payment
         if not self.amount_entry.get().strip():
             interest = ''
             self.interest_entry.configure(state=NORMAL)
@@ -345,7 +346,6 @@ class AddBorrowers:
 
             self.date_to_use = f'{day}-{month}-{year}'
 
-
         else:
             if self.day.get() == '':
                 MainWindow.__new__(MainWindow).unsuccessful_information('Please enter day')
@@ -381,17 +381,37 @@ class AddBorrowers:
             ids_of_customers = cursor.fetchall()
             if (int(self.access_entry.get().strip()),) not in ids_of_customers:
                 MainWindow.__new__(MainWindow).unsuccessful_information('No customer match this access number')
+                cursor.close()
+                connection.close()
                 return
 
             cursor.execute("SELECT customer_no FROM loans WHERE status='on going'")
             ids_with_loans = cursor.fetchall()
             if (int(self.access_entry.get().strip()),) in ids_with_loans:
-                MainWindow.__new__(MainWindow).unsuccessful_information('Borrower has unpaid debt')
-                return
+                cursor.execute("SELECT loan_id, amount FROM loans WHERE customer_no=?",
+                               (self.access_entry.get().strip(),))
+                loan_info = cursor.fetchone()
+                cursor.execute("SELECT amount FROM payments WHERE payment_id=?",
+                               (loan_info[0],))
+                payments_info = cursor.fetchall()
+                current_amount = 0
+                try:
+                    for payment in payments_info:
+                        current_amount += int(payment[0])
+                except IndexError:
+                    pass
+                total_fee = int(loan_info[1]) + int(loan_info[1]) * 0.2
+                if current_amount != total_fee:
+                    MainWindow.__new__(MainWindow).unsuccessful_information('Borrower has unpaid debt')
+                    cursor.close()
+                    connection.close()
+                    return
+                else:
+                    cursor.execute("UPDATE loans SET status='closed' WHERE loan_id=?", (loan_info[0],))
 
-            query = "INSERT INTO loans(customer_no, amount, loan_date, loan_deadline) VALUES(?, ?, ?, ?)"
+            query = "INSERT INTO loans(customer_no, amount, loan_date, loan_deadline, balance) VALUES(?, ?, ?, ?, ?)"
             cursor.execute(query, (self.access_entry.get(), self.amount_entry.get(), self.date_to_use,
-                                   self.deadline_entry.get()))
+                                   self.deadline_entry.get(), int(pay_back_payment)))
             connection.commit()
             cursor.close()
             connection.close()

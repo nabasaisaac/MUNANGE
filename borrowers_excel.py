@@ -16,7 +16,7 @@ class BorrowerExcel:
         connection = sqlite3.connect('munange.db')
         cursor = connection.cursor()
         query = ("SELECT customers.customer_id, customers.name, customers.gender, loans.loan_id, loans.amount, loans.loan_date, "
-                 "loans.loan_deadline FROM customers JOIN loans ON customers.customer_id = loans.customer_no WHERE "
+                 "loans.loan_deadline, loans.balance FROM customers JOIN loans ON customers.customer_id = loans.customer_no WHERE "
                  "loans.status='on going' ORDER BY name ASC")
         cursor.execute(query)
         borrowers = cursor.fetchall()
@@ -70,25 +70,26 @@ class BorrowerExcel:
                     days_list.append(f'{day}-{month}-{year}')
                     loan_date = f'{day}-{month}-{year}'
 
-            # print(days_list)
-            self.paid_days = []
-            current_amount = 0
-            try:
-                for payment in payments_info:
-                    current_amount += int(payment[0])
-                    self.paid_days.append(payment[1])
-            except IndexError:
-                pass
-
-            missed_days = list(days for days in days_list if days not in self.paid_days)
-            outstanding_balance = int(borrower[4]) - current_amount
+            # # print(days_list)
+            # # self.paid_days = []
+            # # current_amount = 0
+            # try:
+            #     for payment in payments_info:
+            #         # self.paid_days.append(payment[1])
+            # except IndexError:
+            #     pass
+            #
+            # # missed_days = list(days for days in days_list if days not in self.paid_days)
+            outstanding_balance = int(borrower[7])
             if current_date > deadline_date:
                 remaining_days = 'Passed deadline'
+                if outstanding_balance == 0:
+                    remaining_days = 'CLOSED'
 
             self.borrowers_list_excel.append((borrower[0], borrower[1], borrower[2],
                                   remaining_days, borrower[4], outstanding_balance))
             count += 1
-        print(self.borrowers_list_excel)
+        # print(self.borrowers_list_excel)
         cursor.close()
         connection.close()
 

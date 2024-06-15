@@ -88,7 +88,7 @@ class BorrowerStatement:
         c.setFillColor(hex_color2)
         c.drawString(400, 560, "AMOUNT BORROWED")
         c.setFillColor(hex_color1)
-        c.drawString(400, 540, f'{borrowers_data[4]}')
+        c.drawString(400, 540, f'{borrowers_data[4]} + INTEREST ({int(borrowers_data[4])*0.2})')
 
         c.setFillColor(hex_color2)
         c.drawString(400, 520, "BALANCE")
@@ -101,23 +101,26 @@ class BorrowerStatement:
 
         c.setFont("Helvetica", 11)
 
+        c.setFillColor('#44aaee')
+        c.roundRect(30, 447, 550, 25, radius=0, fill=1, stroke=0)
+        c.setFillColor('#ffffff')
+        c.drawString(50, 455, "S/No")
+        c.drawString(220, 455, "DATE")
+        c.drawString(400, 455, "AMOUNT PAID (UGX)")
         c.setFillColor('#333333')
-        c.drawString(30, 455, "S/No")
-        c.drawString(200, 455, "DATE")
-        c.drawString(300, 455, "AMOUNT PAID (UGX)")
 
         frame_y = 420
         text_y = 430
         count = 0
-        payments_info.reverse()
+        # payments_info.reverse()
         for payment in payments_info:
             bg_color = '#F7F7F7' if count % 2 == 0 else '#FFFFFF'
             c.setFillColor(bg_color)
             c.roundRect(30, frame_y, 550, 25, radius=0, fill=1, stroke=0)
             c.setFillColor('#666666')
-            c.drawString(35, text_y, f'{count+1}')
-            c.drawString(65, text_y, f'{payment[0]}')
-            c.drawString(160, text_y, f'{payment[1]}')
+            c.drawString(55, text_y, f'{count+1}')
+            c.drawString(220, text_y, f'{payment[0]}')
+            c.drawString(420, text_y, f'{payment[1]}')
             # c.drawString(250, text_y, f'{payment[3]}')
             # c.drawString(370, text_y, f'{payment[4]}')
             # c.drawString(450, text_y, f'{payment[5]}')
@@ -127,14 +130,14 @@ class BorrowerStatement:
                 text_y = 765
                 count = 16
                 c.showPage()
-                for payment in payments_info[15:]:
+                for payment in payments_info[16:]:
                     bg_color = '#F7F7F7' if count % 2 == 0 else '#FFFFFF'
                     c.setFillColor(bg_color)
                     c.roundRect(30, frame_y, 550, 25, radius=0, fill=1, stroke=0)
                     c.setFillColor('#666666')
-                    c.drawString(35, text_y, f'{count + 1}')
-                    c.drawString(65, text_y, f'{payment[0]}')
-                    c.drawString(160, text_y, f'{payment[1]}')
+                    c.drawString(55, text_y, f'{count + 1}')
+                    c.drawString(220, text_y, f'{payment[0]}')
+                    c.drawString(420, text_y, f'{payment[1]}')
 
                     frame_y -= 25
                     text_y -= 25

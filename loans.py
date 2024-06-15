@@ -54,5 +54,3 @@ class Loans:
         button.configure(fg_color='#085f00')
 
         methods()
-
-
