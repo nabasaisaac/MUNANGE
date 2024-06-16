@@ -250,9 +250,13 @@ class UpdateProfile:
             connection.commit()
             cursor.close()
             connection.close()
+            for widget in self.display_window.winfo_children()[2:]:
+                widget.destroy()
             UpdateProfile(self.display_window)
+            MainWindow.__new__(MainWindow).getting_user_info()
             MainWindow.__new__(MainWindow).success_information(f'Profile successfully updated.')
             # self.back_to_view_customers()
+
         except Exception:
             photo = bytes(user_details[1])
             change_format = Image.open(io.BytesIO(user_details[1]))
@@ -276,7 +280,10 @@ class UpdateProfile:
             connection.commit()
             cursor.close()
             connection.close()
+            for widget in self.display_window.winfo_children()[2:]:
+                widget.destroy()
             UpdateProfile(self.display_window)
+            MainWindow.__new__(MainWindow).getting_user_info()
             MainWindow.__new__(MainWindow).success_information(f'Profile successfully updated.')
 
 

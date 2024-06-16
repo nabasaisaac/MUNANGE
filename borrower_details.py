@@ -172,7 +172,7 @@ class BorrowerDetails:
                  justify=LEFT, anchor='w', height=20).pack()
         CTkLabel(left_frame, text='LOAN DATE', text_color='#7b809a', bg_color='white', width=200, justify=LEFT,
                  anchor='w', height=25).pack()
-        CTkLabel(left_frame, text=f'{customer_info[3]}', text_color='#344767', bg_color='white', width=200,
+        CTkLabel(left_frame, text=f'{customer_info[3]} ({customer_info[5]})', text_color='#344767', bg_color='white', width=200,
                  justify=LEFT, anchor='w', height=20).pack()
 
         CTkLabel(right_frame, text='MISSED DAYS', text_color='#7b809a', bg_color='white', width=200, justify=LEFT,

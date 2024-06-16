@@ -324,7 +324,7 @@ class Login_window:
                 # destroying_label()
                 self.window.after(2000, destroying_label)
 
-        invalid_input = CTkLabel(self.window, text=f'   {info}  ', text_color='red', bg_color='gray96',
+        invalid_input = CTkLabel(self.window, text=f'   {info}  ', text_color='red', bg_color='gray95',
                                  fg_color='#FFEEEE', font=('roboto', 15),
                                  corner_radius=10, width=70, height=45,
                                  image=CTkImage(Image.open(resource_path('icons/cancel.png'))),
@@ -382,9 +382,6 @@ class Login_window:
                                    border_width=1, height=35, text_color_disabled='white',
                                    command=self.changing_password)
         self.yes_button.pack(side=LEFT, fill=X, padx=(0, 20), pady=(10, 20), expand=True)
-        # from login_window import Login_window
-        # Login_window.__new__(Login_window).unsuccessful_information("Ooops! it seems you're offline")
-        # self.unsuccessful_information("Ooops! it looks like you're offline")
         self.sent_otp()
 
     def no_command(self):
@@ -451,24 +448,39 @@ class Login_window:
             return
         else:
             try:
+                print(otp_code)
                 # if int(self.code_entry.get().strip()) != self.sent_otp():
-                if int(self.code_entry.get().strip()) != 12345:
+                if int(self.code_entry.get().strip()) != otp_code:
                     self.unsuccessful_information("Invalid OTP")
                     return
             except ValueError:
                 self.unsuccessful_information("Invalid OTP")
                 return
+            connection = sqlite3.connect('munange.db')
+            cursor = connection.cursor()
+            cursor.execute("UPDATE profile SET username=?, password=? WHERE user_id=1",
+                           (self.username_entry.get().strip(), self.password_entry.get()))
+            connection.commit()
+            cursor.close()
+            connection.close()
             self.success_information('Username and password successfully changed')
             # self.back_here()
 
     def sent_otp(self):
         self.yes_button.configure(state=NORMAL)
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT email FROM profile WHERE user_id=1")
+        email = cursor.fetchone()[0]
+        cursor.close()
+        connection.close()
         try:
+            global otp_code
             otp_code = np.random.randint(1000, 9000)
             email_sender = 'nabasaisaac16@gmail.com'
             password = 'ozqz uqbz hbry ysxg'  # Needs use of environment variables to hide the password
             # email_receiver = f'{registered_email}'
-            email_receiver = 'nabasaisaac16@gmail.com'
+            email_receiver = f'{email}'
             subject = 'Munange password reset code'
             body = f'Your munange password reset OTP is: {otp_code}'
             em = EmailMessage()
@@ -482,7 +494,6 @@ class Login_window:
                 smtp.login(email_sender, password)
                 smtp.sendmail(email_sender, email_receiver, em.as_string())
 
-            return otp_code
         except socket.gaierror:
             self.unsuccessful_information("Ooops! it looks like you're offline")
             self.infor.configure(text='Connect to internet for us to send you OTP on your email')

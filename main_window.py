@@ -1,8 +1,10 @@
 import sqlite3
+import sys
 from tkinter import *
+from tkinter import messagebox
 from customtkinter import *
 from PIL import ImageTk, Image, ImageDraw, ImageOps, ImageSequence
-
+import io
 
 class MainWindow:
     def __init__(self, display_window):
@@ -15,6 +17,30 @@ class MainWindow:
 
     def all_methods_here(self):
         self.designing_window()
+
+    def getting_user_info(self):
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT photo, name, email FROM profile WHERE user_id=1")
+        user_details = cursor.fetchone()
+        # photo = bytes(user_details[0])
+        change_format = Image.open(io.BytesIO(user_details[0]))
+        same_photo = MainWindow.__new__(MainWindow).make_circular_image(change_format)
+        if len(user_details[1]) > 10:
+            name = f'{user_details[1][0:10]}...'
+        else:
+            name = f'{user_details[1]}'
+
+        if len(user_details[2].split('@')[0]) > 10:
+            email = f'{user_details[2].split('@')[0][0:10]}...'
+        else:
+            email = f"{user_details[2].split('@')[0]}"
+        configuration = profile_button.configure(image=CTkImage(same_photo, size=(50, 50)),
+                        text=f'{name}\n{email}')
+        cursor.close()
+        connection.close()
+
+        return configuration
 
     def designing_window(self):
         global upper_frame
@@ -37,15 +63,14 @@ class MainWindow:
                  bg_color='#e9edf2', text_color='#085f00').pack(side=LEFT, padx=(20, 0))
 
         """Working on the profile of the user"""
-        image = Image.open('images/m.jpg')
-        circular_image = self.make_circular_image(image)
-        self.profile_button = CTkButton(upper_frame, bg_color='#e9edf2', fg_color='#e9edf2', compound=RIGHT,
-                                        image=CTkImage(circular_image, size=(50, 50)), text='NABASA ISAAC\nnabasaisaac',
-                                        text_color='#172b4c', font=('roboto', 15), hover_color='#e9edf2',
-                                        command=lambda: self.sliding(self.profile_button, self.profile,
+        global profile_button
+        profile_button = CTkButton(upper_frame, bg_color='#e9edf2', fg_color='#e9edf2', compound=RIGHT,
+                                        text='', text_color='#172b4c', font=('roboto', 15), hover_color='#e9edf2',
+                                        command=lambda: self.sliding(profile_button, self.profile,
                                                                      self.display_frame))
 
-        self.profile_button.pack(side=RIGHT, padx=(10, 15))
+        profile_button.pack(side=RIGHT, padx=(10, 15))
+        self.getting_user_info()
 
         self.language_button = CTkButton(upper_frame, bg_color='#e9edf2', fg_color='white', compound=LEFT, width=100,
                                         image=CTkImage(Image.open('images/english.png'), size=(15, 10)), text='English',
@@ -109,7 +134,7 @@ class MainWindow:
                                      self.employees, self.display_frame))
         self.employees_button.pack(side=TOP, padx=25)
 
-        self.sliding(self.profile_button, self.profile, self.display_frame)
+        self.sliding(profile_button, self.profile, self.display_frame)
         # self.sliding(self.loans_button, self.loans, self.display_frame)
         # self.sliding(self.customers_button, self.customers, self.display_frame)
         # self.sliding(self.employees_button, self.employees, self.display_frame)
@@ -120,7 +145,7 @@ class MainWindow:
                                      width=150, height=40, hover_color='#2D9834', text_color='white',
                                      text='Logout', font=('roboto', 15), compound=LEFT, anchor='w',
                                      image=CTkImage(Image.open('icons/logout.png'), size=(20, 20)),
-                                    )
+                                    command=self.log_out)
         self.logout_button.pack(side=BOTTOM, padx=25, pady=10)
 
     def profile(self, display_frame):
@@ -245,7 +270,7 @@ class MainWindow:
             else:  # If y is 0.4 or more, stop animation
                 invalid_input.place(relx=0.5, rely=y)  # Ensure the label is placed
                 # destroying_label()
-                upper_frame.after(1500, destroying_label)
+                upper_frame.after(2000, destroying_label)
 
         invalid_input = CTkLabel(upper_frame, text=f'   {info}  ', text_color='red', bg_color='#e9edf2', fg_color='#FFEEEE',
                                  corner_radius=10, width=70, height=45, image=CTkImage(Image.open('icons/cancel.png')),
@@ -267,6 +292,13 @@ class MainWindow:
         circular_image.putalpha(mask)
 
         return circular_image
+
+    def log_out(self):
+        confirm_logout = messagebox.askyesno('Confirm Logout', 'Are you sure you want to exit?',
+                                             parent=self.display_window)
+        if confirm_logout:
+            sys.exit()
+
 
 # from PIL import Image, ImageFilter, ImageDraw, ImageTk, ImageEnhance
 # import customtkinter as ctk

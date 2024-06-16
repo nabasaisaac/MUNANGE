@@ -36,7 +36,8 @@ class Profile:
         UpdateProfile(self.display_window)
 
     def change_password(self):
-        pass
+        from change_password import ChangePassword
+        ChangePassword(self.display_window)
 
     def hiding(self):
         self.update_profile_button.configure(fg_color='#3BA541')
