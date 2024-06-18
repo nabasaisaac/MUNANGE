@@ -134,12 +134,14 @@ class MainWindow:
                                      self.employees, self.display_frame))
         self.employees_button.pack(side=TOP, padx=25)
 
-        self.sliding(profile_button, self.profile, self.display_frame)
+        self.sliding(self.dashboard_button, self.dashboard, self.display_frame)
+        # self.sliding(profile_button, self.profile, self.display_frame)
         # self.sliding(self.loans_button, self.loans, self.display_frame)
         # self.sliding(self.customers_button, self.customers, self.display_frame)
         # self.sliding(self.employees_button, self.employees, self.display_frame)
         # self.sliding(self.loans_button, self.loans, self.display_frame)
         # self.sliding(self.repayments_button, self.repayments, self.display_frame)
+        # self.sliding(self.reports_button, self.reports, self.display_frame)
 
         self.logout_button = CTkButton(self.side_frame, bg_color='#3BA541', fg_color='#3BA541', corner_radius=15,
                                      width=150, height=40, hover_color='#2D9834', text_color='white',
@@ -153,7 +155,8 @@ class MainWindow:
         Profile(display_frame)
 
     def dashboard(self, display_frame):
-        pass
+        from dashboard import Dashboard
+        Dashboard(display_frame)
 
     def loans(self, display_frame):
         from loans import Loans
@@ -168,7 +171,8 @@ class MainWindow:
         Customers(display_frame)
 
     def reports(self, display_frame):
-        pass
+        from report import Report
+        Report(display_frame)
 
     def employees(self, display_frame):
         from employees import Employees

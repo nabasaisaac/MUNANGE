@@ -17,7 +17,7 @@ class BorrowerDetails:
         self.designing_window()
 
     def designing_window(self):
-        print(self.borrower_data)
+        # print(self.borrower_data)
         for widget in self.display_window.winfo_children()[2:]:
             widget.destroy()
         """_______________________Getting some important days_________________________"""
