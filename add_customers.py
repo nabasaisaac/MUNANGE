@@ -4,7 +4,7 @@ from customtkinter import *
 from PIL import ImageTk, Image
 from main_window import MainWindow
 from tkinter import messagebox
-
+import datetime
 
 class AddCustomers:
     def __init__(self, display_window):
@@ -220,29 +220,31 @@ class AddCustomers:
             with open(self.passport_image_browsed, 'rb') as f:
                 photo = f.read()
             if self.email_entry.get() and not self.id_number_entry.get():
-                query = "INSERT INTO customers (photo, name, gender, phone, email, district) VALUES (?, ?, ?, ?, ?, ?)"
+                query = "INSERT INTO customers (photo, name, gender, phone, email, district, register_date) VALUES (?, ?, ?, ?, ?, ?, ?)"
                 cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
                                        self.phone_entry.get().strip(), self.email_entry.get().strip(),
-                                       self.district_entry.get().strip().upper()))
+                                       self.district_entry.get().strip().upper(), datetime.date.today()))
 
             elif not self.email_entry.get() and self.id_number_entry.get():
 
-                query = "INSERT INTO customers (photo, name, gender, nin, district) VALUES (?, ?, ?, ?, ?)"
+                query = "INSERT INTO customers (photo, name, gender, nin, district, register_date) VALUES (?, ?, ?, ?, ?, ?)"
                 cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
-                                       self.id_number_entry.get().strip(), self.district_entry.get().strip().upper()))
+                                       self.id_number_entry.get().strip(), self.district_entry.get().strip().upper()
+                                       , datetime.date.today()))
 
             elif not self.email_entry.get() and not self.id_number_entry.get():
 
-                query = "INSERT INTO customers (photo, name, gender, phone, district) VALUES (?, ?, ?, ?, ?)"
+                query = "INSERT INTO customers (photo, name, gender, phone, district, register_date) VALUES (?, ?, ?, ?, ?, ?)"
                 cursor.execute(query, (photo, customer_name, self.gender_value.get().upper(),
-                                       self.phone_entry.get().strip(), self.district_entry.get().strip().upper()))
+                                       self.phone_entry.get().strip(), self.district_entry.get().strip().upper()
+                                       , datetime.date.today()))
 
             else:
-                query = "INSERT INTO customers (photo, name, gender, phone, email, nin, district) VALUES (?, ?, ?, ?, ?, ?, ?)"
+                query = "INSERT INTO customers (photo, name, gender, phone, email, nin, district, register_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
                 cursor.execute(query,
                                (photo, customer_name, self.gender_value.get().upper(), self.phone_entry.get().strip(),
                                 self.email_entry.get().strip(), self.id_number_entry.get().strip(),
-                                self.district_entry.get().strip().upper()))
+                                self.district_entry.get().strip().upper(), datetime.date.today()))
             connection.commit()
             cursor.close()
             connection.close()
@@ -255,6 +257,7 @@ class AddCustomers:
 
     def updating_customer(self, window, customer_data):
         self.customer_data = customer_data
+
         for widget in window.winfo_children()[2:]:
             widget.destroy()
         self.display_window = window
@@ -420,10 +423,17 @@ class AddCustomers:
                     self.email_entry.get().strip(), self.id_number_entry.get().strip(),
                     self.district_entry.get().strip().upper(), customer_data[0]))
             connection.commit()
+
+            cursor = cursor.execute("SELECT customer_id, photo, name, gender, phone, email, nin, district FROM "
+                                        "customers WHERE customer_id=?", (customer_data[0], ))
+            customer_data = cursor.fetchone()
+            self.updating_customer(self.display_window, customer_data)
+
             cursor.close()
             connection.close()
             MainWindow.__new__(MainWindow).success_information(f'Customer successfully updated.')
-            self.back_to_view_customers()
+
+            # self.()
         except Exception:
             photo = bytes(customer_data[1])
             change_format = Image.open(io.BytesIO(customer_data[1]))
@@ -461,10 +471,16 @@ class AddCustomers:
                     self.email_entry.get().strip(), self.id_number_entry.get().strip(),
                     self.district_entry.get().strip().upper(), customer_data[0]))
             connection.commit()
+
+            cursor = cursor.execute("SELECT customer_id, photo, name, gender, phone, email, nin, district FROM "
+                                        "customers WHERE customer_id=?", (customer_data[0], ))
+            customer_data = cursor.fetchone()
+
+            self.updating_customer(self.display_window, customer_data)
+
             cursor.close()
             connection.close()
             MainWindow.__new__(MainWindow).success_information(f'Customer successfully updated.')
-            self.back_to_view_customers()
 
     def update_photo(self):
 

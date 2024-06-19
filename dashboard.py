@@ -119,55 +119,93 @@ class Dashboard:
         self.employees_frame = CTkFrame(self.right_frame1, bg_color='gray95', fg_color='white')
         self.employees_frame.grid(row=1, column=1, pady=(0, 10))
 
-        customers_image_label = CTkLabel(self.customers_frame, text='   50', font=('roboto', 16, 'bold'),
+        connection = sqlite3.connect('munange.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT COUNT(customer_id) FROM customers")
+        customers = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(employee_id) FROM employees")
+        employees = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(customer_no) FROM loans WHERE status='on going'")
+        borrowers = cursor.fetchone()[0]
+
+        cursor.close()
+        connection.close()
+
+        customers_image_label = CTkLabel(self.customers_frame, text=f'   {customers}', font=('roboto', 16, 'bold'),
                                 image=CTkImage(Image.open('icons/customers-dashboard.png'), size=(70, 80)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
         customers_image_label.pack(side=LEFT, padx=5, pady=5)
         CTkLabel(self.customers_frame, text='Customers', fg_color='white', bg_color='white',
-                 text_color='gray30', font=('roboto', 16)).place(x=90, y=60)
+                 text_color='gray50', font=('roboto', 16)).place(x=90, y=60)
 
-        borrowers_image_label = CTkLabel(self.borrowers_frame, text='   3', font=('roboto', 16, 'bold'),
+        borrowers_image_label = CTkLabel(self.borrowers_frame, text=f'   {borrowers}', font=('roboto', 16, 'bold'),
                                 image=CTkImage(Image.open('icons/dashboard-borrowers.png'), size=(70, 80)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
         borrowers_image_label.pack(side=LEFT, padx=5, pady=5)
         CTkLabel(self.borrowers_frame, text='Borrowers', fg_color='white', bg_color='white',
-                 text_color='gray30', font=('roboto', 16)).place(x=90, y=60)
+                 text_color='gray50', font=('roboto', 16)).place(x=90, y=60)
 
-        overdue_image_label = CTkLabel(self.overdue_frame, text='0', font=('roboto', 16, 'bold'),
+        self.overdue_image_label = CTkLabel(self.overdue_frame, text='0', font=('roboto', 16, 'bold'),
                                 image=CTkImage(Image.open('icons/deadline.png'), size=(80, 80)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
-        overdue_image_label.pack(side=LEFT, padx=5, pady=5)
+        self.overdue_image_label.pack(side=LEFT, padx=5, pady=5)
         CTkLabel(self.overdue_frame, text='Overdue', fg_color='white', bg_color='white',
-                 text_color='gray30', font=('roboto', 16)).place(x=85, y=60)
+                 text_color='gray50', font=('roboto', 16)).place(x=85, y=60)
 
-        employees_image_label = CTkLabel(self.employees_frame, text='   0', font=('roboto', 16, 'bold'),
+        self.employees_image_label = CTkLabel(self.employees_frame, text=f'   {employees}', font=('roboto', 16, 'bold'),
                                 image=CTkImage(Image.open('icons/dashboard-employees.png'), size=(60, 70)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
-        employees_image_label.pack(side=LEFT, padx=5, pady=10)
+        self.employees_image_label.pack(side=LEFT, padx=5, pady=10)
         CTkLabel(self.employees_frame, text='Employees', fg_color='white', bg_color='white',
-                 text_color='gray30', font=('roboto', 16)).place(x=80, y=60)
+                 text_color='gray50', font=('roboto', 16)).place(x=80, y=60)
 
     def working_on_the_defaulters(self):
 
-        time_method = datetime(date.today().year, date.today().month, date.today().day)
-        current_date = f"{time_method.strftime('%d')}-{time_method.strftime('%b')}-{time_method.strftime('%Y')}"
-        print(current_date)
         connection = sqlite3.connect('munange.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT COUNT(loan_id), name, deadline FROM LOANS WHERE deadline < ? AND status='on going'",
-                       (current_date,))
+        cursor.execute("SELECT customer_no, loan_deadline FROM LOANS WHERE status='on going' LIMIT 7")
 
-        CTkLabel(self.right_frame2, text='Defaulters List', font=('roboto', 16),
-                 text_color='black', fg_color='white', bg_color='white').pack(pady=(10, 0))
-        CTkFrame(self.right_frame2, height=1, bg_color='gray90', fg_color='gray90').pack(fill=X)
+        loans_list = cursor.fetchall()
 
-        CTkLabel(self.right_frame2, text='Normal progress! All repayments are up-to-date.', font=('roboto', 16),
-                 text_color='#3BA541', fg_color='white', bg_color='white').pack(pady=(50, 0))
+        time_method = datetime(date.today().year, date.today().month, date.today().day)
+        cur_date = f"{time_method.strftime('%d')}-{time_method.strftime('%b')}-{time_method.strftime('%Y')}"
+        current_date = datetime.strptime(cur_date, '%d-%b-%Y')
+        print(loans_list)
+        over_due_list = []
+        for deadline_date in loans_list:
+            if current_date > datetime.strptime(deadline_date[1], '%d-%b-%Y'):
+                over_due_list.append((deadline_date[0], deadline_date[1]))
 
+        # over_due_list = []
+        cursor.close()
+        connection.close()
+        defaulters_label = CTkLabel(self.right_frame2, text='Defaulters List', font=('roboto', 16),
+                 text_color='black', fg_color='white', bg_color='white')
+        defaulters_label.pack(pady=(10, 0), fill=X, padx=20)
+
+        line = CTkFrame(self.right_frame2, height=1, bg_color='gray90', fg_color='gray90')
+        line.pack(fill=X)
+
+        if len(over_due_list) == 0:
+            CTkLabel(self.right_frame2, text='Normal progress! All repayments are up-to-date.', font=('roboto', 16),
+                     text_color='#3BA541', fg_color='white', bg_color='white').pack(pady=(50, 0))
+        else:
+            self.overdue_image_label.configure(text=f'{len(over_due_list)}')
+            line.pack_forget()
+            defaulters_label.configure(justify=LEFT, anchor='w', font=('roboto', 15, 'bold'))
+            CTkLabel(self.right_frame2, text='S/No.\t\tAccess No.\tDeadline Date', font=('roboto', 16),
+                     text_color='black', fg_color='white', bg_color='white', justify=LEFT, anchor='w').pack(fill=X, padx=20)
+            CTkFrame(self.right_frame2, height=1, bg_color='gray90', fg_color='gray90').pack(fill=X, padx=20)
+            for i, info in enumerate(over_due_list, start=1):
+                (CTkLabel(self.right_frame2, text=f'{i}.\t\t{info[0]}\t\t{info[1]}', font=('roboto', 16),
+                         text_color='gray50', fg_color='white', bg_color='white', justify=LEFT, anchor='w')
+                 .pack(fill=X, padx=20))
     def hiding(self):
         self.dashboard_button.configure(fg_color='#3BA541')
         # self.change_password_button.configure(fg_color='#3BA541')

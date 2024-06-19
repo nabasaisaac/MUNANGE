@@ -30,7 +30,7 @@ class ViewExpenses:
 
         self.history_button = CTkButton(history_frame, bg_color='white', fg_color='#b7c1d1', font=('roboto', 15),
                                     text='History', text_color='#0C2844', compound=LEFT, hover_color='#98a6bd',
-                                    image=CTkImage(Image.open('icons/guarantor.png')), width=20,
+                                    image=CTkImage(Image.open('icons/history.png')), width=20,
                                     command=self.getting_history)
         self.history_button.pack(side=LEFT)
 

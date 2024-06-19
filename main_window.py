@@ -134,14 +134,14 @@ class MainWindow:
                                      self.employees, self.display_frame))
         self.employees_button.pack(side=TOP, padx=25)
 
-        self.sliding(self.dashboard_button, self.dashboard, self.display_frame)
+        # self.sliding(self.dashboard_button, self.dashboard, self.display_frame)
         # self.sliding(profile_button, self.profile, self.display_frame)
         # self.sliding(self.loans_button, self.loans, self.display_frame)
         # self.sliding(self.customers_button, self.customers, self.display_frame)
         # self.sliding(self.employees_button, self.employees, self.display_frame)
         # self.sliding(self.loans_button, self.loans, self.display_frame)
         # self.sliding(self.repayments_button, self.repayments, self.display_frame)
-        # self.sliding(self.reports_button, self.reports, self.display_frame)
+        self.sliding(self.reports_button, self.reports, self.display_frame)
 
         self.logout_button = CTkButton(self.side_frame, bg_color='#3BA541', fg_color='#3BA541', corner_radius=15,
                                      width=150, height=40, hover_color='#2D9834', text_color='white',

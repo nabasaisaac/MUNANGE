@@ -118,4 +118,3 @@ class LineGraph:
         canvas = FigureCanvasTkAgg(figure, master=self.display_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(pady=5)
-
