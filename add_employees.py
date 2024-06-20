@@ -1,9 +1,22 @@
 import sqlite3
 import io
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
 from main_window import MainWindow
 from tkinter import messagebox
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class AddEmployees:
@@ -28,7 +41,7 @@ class AddEmployees:
         self.basic_infor_frame.pack(side=LEFT, pady=20, padx=(0, 20), fill=X, expand=True)
 
         global default_circular_image
-        image = Image.open('images/default_photo.png')
+        image = Image.open(resource_path('images/default_photo.png'))
         default_circular_image = MainWindow.__new__(MainWindow).make_circular_image(image)
         self.employee_photo_label = CTkLabel(self.side_frame, fg_color='white', bg_color='white', text='',
                                              image=CTkImage(default_circular_image, size=(150, 150)))
@@ -143,7 +156,7 @@ class AddEmployees:
         self.save_frame = CTkFrame(self.basic_infor_frame, fg_color='white', bg_color='white')
         self.save_frame.pack(fill=X, padx=20, pady=(10, 80), expand=True)
         self.save_button = CTkButton(self.save_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
-                                     image=CTkImage(Image.open('icons/save.png'), size=(20, 20)), text_color='white',
+                                     image=CTkImage(Image.open(resource_path('icons/save.png')), size=(20, 20)), text_color='white',
                                      text='Save', command=self.saving_employee)
         self.save_button.pack(side=RIGHT)
 
@@ -155,13 +168,13 @@ class AddEmployees:
                                                                      ('jpg files', '*.jpg'), ('png files', '*.png'),
                                                                      ('All types', '*.*')))
 
-            current_current_passport = Image.open(self.passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.passport_image_browsed))
 
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.employee_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
         except AttributeError:
             self.passport_image_browsed = 'images/default_photo.png'
-            current_current_passport = Image.open(self.passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.passport_image_browsed))
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.employee_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
 
@@ -210,7 +223,7 @@ class AddEmployees:
             self.email_entry.delete(0, END)
             self.sur_name_entry.focus_set()
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get():
@@ -295,7 +308,7 @@ class AddEmployees:
 
         self.back_button = CTkButton(three_buttons, bg_color='white', fg_color='#0C2844', font=('roboto', 15),
                                      text='', text_color='white', compound=LEFT,
-                                     image=CTkImage(Image.open('icons/back_image.png')), width=20,
+                                     image=CTkImage(Image.open(resource_path('icons/back_image.png'))), width=20,
                                      command=self.back_to_view_employees)
         self.back_button.pack(side=LEFT)
 
@@ -338,7 +351,7 @@ class AddEmployees:
         self.delete_button = CTkButton(self.save_frame, bg_color='white', fg_color='#ff5c5c', font=('roboto', 15),
                                        text='Delete', text_color='white', compound=LEFT, width=100,
                                        hover_color='#ff3f3f',
-                                       image=CTkImage(Image.open('icons/DELETE.png'), size=(15, 15)),
+                                       image=CTkImage(Image.open(resource_path('icons/DELETE.png')), size=(15, 15)),
                                        command=lambda: self.deleting_employee(employee_data))
 
         self.delete_button.pack(side=RIGHT, padx=(0, 15))
@@ -378,7 +391,7 @@ class AddEmployees:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get().strip():
@@ -481,7 +494,7 @@ class AddEmployees:
                                                                              ('png files', '*.png'),
                                                                              ('All types', '*.*')))
 
-            current_current_passport = Image.open(self.new_passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.new_passport_image_browsed))
 
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.employee_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
@@ -503,7 +516,7 @@ class AddEmployees:
                                                                    f'permanently delete {employee_data[2].split()[-1]}',
                                                parent=self.display_window)
         if confirm_deletion:
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             cursor.execute(f"DELETE FROM employees WHERE employee_id='{employee_data[0]}'")
             connection.commit()

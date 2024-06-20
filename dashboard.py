@@ -5,15 +5,22 @@ import sqlite3
 import datetime
 from datetime import date, datetime
 from tkinter import *
-import numpy as np
-from email.message import EmailMessage
-import ssl
-import smtplib
-from PIL import ImageTk, Image, ImageFilter, ImageTk, ImageEnhance, ImageDraw
+from PIL import Image, ImageFilter, ImageTk, ImageEnhance, ImageDraw
+
+from main_window import MainWindow
 import os
 import sys
-from main_window import MainWindow
-from line_graph import LineGraph
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class Dashboard:
@@ -31,7 +38,7 @@ class Dashboard:
 
         self.dashboard_button = CTkButton(self.upper_buttons_frame, text='Dashboard', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
-                                        font=('roboto', 15), image=CTkImage(Image.open('icons/filled-dashboard.png'),
+                                        font=('roboto', 15), image=CTkImage(Image.open(resource_path('icons/filled-dashboard.png')),
                                         size=(15, 15)), compound=LEFT,  height=35, width=150, command=lambda:
                                         self.sliding(self.dashboard_button, self.dashboard))
         self.dashboard_button.pack(side=LEFT)
@@ -48,7 +55,7 @@ class Dashboard:
 
         def process_image(image_path, blur_radius=8, transparency=500, corner_radius=20):
             # Open the image
-            image = Image.open(image_path).convert("RGBA")
+            image = Image.open(resource_path(image_path)).convert("RGBA")
 
             # Apply Gaussian blur
             blurred_image = image.filter(ImageFilter.GaussianBlur(blur_radius))
@@ -76,7 +83,7 @@ class Dashboard:
         background_image = ImageTk.PhotoImage(process_image(random.choice(image_path)).resize((840, 350)))
         self.image_canvas.create_image(10, 20, image=background_image, anchor='nw')
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT photo, name FROM profile WHERE user_id=1")
         user_details = cursor.fetchone()
@@ -103,6 +110,7 @@ class Dashboard:
         self.right_frame2 = CTkFrame(self.display_window, bg_color='gray95', fg_color='white', corner_radius=10)
         self.right_frame2.pack(side=LEFT, fill=BOTH, expand=True, padx=(0, 20))
         self.working_on_the_defaulters()
+        from line_graph import LineGraph
         LineGraph(left_frame)
 
     def working_on_right_frame1(self):
@@ -119,7 +127,7 @@ class Dashboard:
         self.employees_frame = CTkFrame(self.right_frame1, bg_color='gray95', fg_color='white')
         self.employees_frame.grid(row=1, column=1, pady=(0, 10))
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT COUNT(customer_id) FROM customers")
         customers = cursor.fetchone()[0]
@@ -134,7 +142,7 @@ class Dashboard:
         connection.close()
 
         customers_image_label = CTkLabel(self.customers_frame, text=f'   {customers}', font=('roboto', 16, 'bold'),
-                                image=CTkImage(Image.open('icons/customers-dashboard.png'), size=(70, 80)),
+                                image=CTkImage(Image.open(resource_path('icons/customers-dashboard.png')), size=(70, 80)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
         customers_image_label.pack(side=LEFT, padx=5, pady=5)
@@ -142,7 +150,7 @@ class Dashboard:
                  text_color='gray50', font=('roboto', 16)).place(x=90, y=60)
 
         borrowers_image_label = CTkLabel(self.borrowers_frame, text=f'   {borrowers}', font=('roboto', 16, 'bold'),
-                                image=CTkImage(Image.open('icons/dashboard-borrowers.png'), size=(70, 80)),
+                                image=CTkImage(Image.open(resource_path('icons/dashboard-borrowers.png')), size=(70, 80)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
         borrowers_image_label.pack(side=LEFT, padx=5, pady=5)
@@ -150,7 +158,7 @@ class Dashboard:
                  text_color='gray50', font=('roboto', 16)).place(x=90, y=60)
 
         self.overdue_image_label = CTkLabel(self.overdue_frame, text='0', font=('roboto', 16, 'bold'),
-                                image=CTkImage(Image.open('icons/deadline.png'), size=(80, 80)),
+                                image=CTkImage(Image.open(resource_path('icons/deadline.png')), size=(80, 80)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
         self.overdue_image_label.pack(side=LEFT, padx=5, pady=5)
@@ -158,7 +166,7 @@ class Dashboard:
                  text_color='gray50', font=('roboto', 16)).place(x=85, y=60)
 
         self.employees_image_label = CTkLabel(self.employees_frame, text=f'   {employees}', font=('roboto', 16, 'bold'),
-                                image=CTkImage(Image.open('icons/dashboard-employees.png'), size=(60, 70)),
+                                image=CTkImage(Image.open(resource_path('icons/dashboard-employees.png')), size=(60, 70)),
                                 compound=LEFT, text_color='black', width=200, justify=LEFT, anchor='w',
                                 fg_color='white')
         self.employees_image_label.pack(side=LEFT, padx=5, pady=10)
@@ -167,7 +175,7 @@ class Dashboard:
 
     def working_on_the_defaulters(self):
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT customer_no, loan_deadline FROM LOANS WHERE status='on going' LIMIT 7")
 
@@ -176,7 +184,7 @@ class Dashboard:
         time_method = datetime(date.today().year, date.today().month, date.today().day)
         cur_date = f"{time_method.strftime('%d')}-{time_method.strftime('%b')}-{time_method.strftime('%Y')}"
         current_date = datetime.strptime(cur_date, '%d-%b-%Y')
-        print(loans_list)
+        # print(loans_list)
         over_due_list = []
         for deadline_date in loans_list:
             if current_date > datetime.strptime(deadline_date[1], '%d-%b-%Y'):

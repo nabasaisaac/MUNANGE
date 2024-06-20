@@ -1,10 +1,23 @@
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
 import datetime
 from datetime import date, datetime, timedelta
 from main_window import MainWindow
 import sqlite3
 import io
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class BorrowerDetails:
@@ -21,7 +34,7 @@ class BorrowerDetails:
         for widget in self.display_window.winfo_children()[2:]:
             widget.destroy()
         """_______________________Getting some important days_________________________"""
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         query = (
             "SELECT customers.photo, customers.name, loans.loan_id, loans.loan_date, loans.amount, loans.loan_deadline FROM customers "
@@ -87,7 +100,7 @@ class BorrowerDetails:
         """__________________________________End of the code here_____________________________"""
 
         back_button = CTkButton(self.display_window,
-                                image=CTkImage(Image.open('icons/back_image.png'), size=(20, 20)), text_color='white',
+                                image=CTkImage(Image.open(resource_path('icons/back_image.png')), size=(20, 20)), text_color='white',
                                 bg_color='gray95', fg_color='#0C2844', text='', width=10,
                                 command=self.back_to_overview)
         back_button.place(x=15, y=60)
@@ -111,7 +124,7 @@ class BorrowerDetails:
             self.widgets_frame.pack(fill=X, padx=(20, 10), pady=10, expand=True)
             frames.append(self.widgets_frame)
 
-        CTkLabel(frames[0], image=CTkImage(Image.open('images/munange_pdf_logo.png'), size=(100, 90)),
+        CTkLabel(frames[0], image=CTkImage(Image.open(resource_path('images/munange_pdf_logo.png')), size=(100, 90)),
                  text='', font=('arial', 17, 'bold'), compound=LEFT).pack(side=LEFT)
         headed_paper_names = CTkFrame(frames[0], bg_color='white', fg_color='white', corner_radius=0,
                                       )
@@ -137,11 +150,7 @@ class BorrowerDetails:
                               text_color='#344767', font=('roboto', 15, 'bold'), compound=LEFT)
 
         self.title.pack()
-        # connection = sqlite3.connect('munange.db')
-        # cursor = connection.cursor()
-        # cursor.execute(f"SELECT photo FROM customers WHERE customer_id={self.borrower_data[0]}")
-        #
-        # binary_photo = cursor.fetchone()[0]
+
         global photo
         photo = Image.open(io.BytesIO(customer_info[0]))
 
@@ -239,7 +248,7 @@ class BorrowerDetails:
         self.print_button = CTkButton(self.lower_frame, text='', bg_color='gray95', fg_color='#0C2844',
                                        border_color='gray95', width=0,
                                        text_color='white', font=('roboto', 15),
-                                       image=CTkImage(Image.open('icons/print.png'), size=(20, 20)),
+                                       image=CTkImage(Image.open(resource_path('icons/print.png')), size=(20, 20)),
                                        command=self.print_borrower_statement, text_color_disabled='white')
         self.print_button.pack(side=RIGHT)
 
@@ -261,7 +270,7 @@ class BorrowerDetails:
             items.destroy()
 
         self.missed_days_button.configure(text='Back to statement', compound=LEFT,
-                                    image=CTkImage(Image.open('icons/white_back.png'), size=(20, 17)),
+                                    image=CTkImage(Image.open(resource_path('icons/white_back.png')), size=(20, 17)),
                                     command=self.back_to_statement)
 
         self.title.configure(text=f"BORROWER'S MISSED DAYS AS OF, {current_date2.upper()}")

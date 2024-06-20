@@ -4,7 +4,19 @@ import datetime
 from datetime import date
 from main_window import MainWindow
 import sqlite3
+import os
+import sys
 
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class AddExpenses:
     def __init__(self, display_frame, employee_id):
@@ -67,7 +79,7 @@ class AddExpenses:
         self.save_frame = CTkFrame(self.display_frame, fg_color='white', bg_color='white')
         self.save_frame.pack(fill=X, padx=20, pady=10, expand=True)
         self.save_button = CTkButton(self.save_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
-                                     image=CTkImage(Image.open('icons/save.png'), size=(20, 20)), text_color='white',
+                                     image=CTkImage(Image.open(resource_path('icons/save.png')), size=(20, 20)), text_color='white',
                                      text='Save', command=lambda: self.add_expenses_in_database(False))
         self.save_button.pack(side=RIGHT)
 
@@ -144,7 +156,7 @@ class AddExpenses:
             MainWindow.__new__(MainWindow).unsuccessful_information('Invalid amount entered')
 
         else:
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             cursor.execute("SELECT employee_no, date FROM expenditure")
             initial_expenses = cursor.fetchall()

@@ -7,7 +7,6 @@ import os
 import sys
 import tempfile
 from datetime import date, datetime
-import sqlite3
 
 
 def resource_path(relative_path):

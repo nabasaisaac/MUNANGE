@@ -1,5 +1,19 @@
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
+
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class Repayments:
@@ -17,7 +31,7 @@ class Repayments:
 
         self.repay_debt_button = CTkButton(self.upper_buttons_frame, text='Clear Debt', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
-                                        font=('roboto', 15), image=CTkImage(Image.open('icons/grant_loan.png'),
+                                        font=('roboto', 15), image=CTkImage(Image.open(resource_path('icons/grant_loan.png')),
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:
                                         self.sliding(self.repay_debt_button, self.repay_debt))
         self.repay_debt_button.pack(side=LEFT)

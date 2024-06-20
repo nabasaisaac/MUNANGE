@@ -5,14 +5,25 @@ from openpyxl.styles import Font, Alignment
 from io import BytesIO
 import webbrowser
 import tempfile
-import sys
+
 import os
-from main_window import MainWindow
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class CustomerExcel:
     def __init__(self, directory):
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT name, gender, phone, email, nin, district FROM customers ORDER BY name ASC")
         customers = cursor.fetchall()

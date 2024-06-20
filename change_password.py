@@ -1,10 +1,19 @@
 from customtkinter import *
-from PIL import ImageTk, Image
-import datetime
-from datetime import date, datetime, timedelta
 from main_window import MainWindow
 import sqlite3
-import io
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class ChangePassword:
@@ -67,7 +76,7 @@ class ChangePassword:
         self.submit_button.pack(side=RIGHT, padx=20, pady=(10, 20))
 
     def change_password_command(self, event):
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT password FROM profile WHERE user_id=1")
         old_password = cursor.fetchone()[0]
@@ -89,7 +98,7 @@ class ChangePassword:
             MainWindow.__new__(MainWindow).unsuccessful_information("New password is very weak")
             return
         else:
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             cursor.execute("UPDATE profile SET username=?, password=? WHERE user_id=1",
                            (self.username_entry.get().strip(), self.password_entry.get()))

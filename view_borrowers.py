@@ -1,10 +1,24 @@
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
 from main_window import MainWindow
 from tkinter import ttk
 import sqlite3
 import datetime
 from datetime import date, datetime, timedelta
+
+import os
+import sys
+
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class ViewBorrowers:
@@ -28,13 +42,13 @@ class ViewBorrowers:
 
         self.download_button = CTkButton(self.buttons_frame, fg_color='#0C2844', bg_color='white', text='Download',
                                          text_color='white', font=('roboto', 15), compound=LEFT, width=100,
-                                         image=CTkImage(Image.open('icons/download.png'), size=(20, 20)),
+                                         image=CTkImage(Image.open(resource_path('icons/download.png')), size=(20, 20)),
                                          command=lambda: self.print_or_download_borrowers(True))
         self.download_button.pack(side=RIGHT, padx=10)
 
         self.print_button = CTkButton(self.buttons_frame, fg_color='#0C2844', bg_color='white', text='Print',
                                          text_color='white', font=('roboto', 15), compound=LEFT, width=100,
-                                         image=CTkImage(Image.open('icons/print.png'), size=(15, 15)),
+                                         image=CTkImage(Image.open(resource_path('icons/print.png')), size=(15, 15)),
                                       command=lambda: self.print_or_download_borrowers(False))
         self.print_button.pack(side=RIGHT, padx=(5, 0))
 
@@ -46,7 +60,7 @@ class ViewBorrowers:
         self.search_borrowers_entry.bind('<KeyRelease>', self.searching_for_borrowers)
 
         CTkLabel(self.search_borrowers_entry, bg_color='gray95', fg_color='gray95', text='', width=10,
-                 image=CTkImage(Image.open('icons/search2.png'), size=(15, 15))).place(relx=0.8, rely=0.01)
+                 image=CTkImage(Image.open(resource_path('icons/search2.png')), size=(15, 15))).place(relx=0.8, rely=0.01)
         self.working_on_treeview(self.title_frame)
 
     def working_on_treeview(self, tree_frame):
@@ -98,7 +112,7 @@ class ViewBorrowers:
         customers_tree.tag_configure('color3', foreground='red')
         my_tag = 'color2'
         # Getting data from database
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         cursor.execute(query)
@@ -213,14 +227,6 @@ class ViewBorrowers:
         # print(customers_data)
         if row_double_click:
             from borrower_details import BorrowerDetails
-            # connection = sqlite3.connect('munange.db')
-            # cursor = connection.cursor()
-            # customer_id = customer_info[0]
-            # cursor.execute(f"SELECT * FROM customers WHERE customer_id='{customer_id}'")
-            # customers_data = cursor.fetchone()
-            # cursor.close()
-            # connection.close()
-            # .__new__(AddCustomers).updating_customer(self.display_window, customers_data)
             BorrowerDetails(self.display_window, borrower_data)
         else:
             pass

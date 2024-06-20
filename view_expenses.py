@@ -2,8 +2,21 @@ from customtkinter import *
 from PIL import Image
 import datetime
 from datetime import date
-from main_window import MainWindow
 import sqlite3
+
+import os
+import sys
+
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class ViewExpenses:
@@ -30,7 +43,7 @@ class ViewExpenses:
 
         self.history_button = CTkButton(history_frame, bg_color='white', fg_color='#b7c1d1', font=('roboto', 15),
                                     text='History', text_color='#0C2844', compound=LEFT, hover_color='#98a6bd',
-                                    image=CTkImage(Image.open('icons/history.png')), width=20,
+                                    image=CTkImage(Image.open(resource_path('icons/history.png')), size=(15, 15)), width=20,
                                     command=self.getting_history)
         self.history_button.pack(side=LEFT)
 
@@ -47,7 +60,7 @@ class ViewExpenses:
         self.fetch_all_expenses(month)
 
     def fetch_all_expenses(self, month):
-        connection = sqlite3.connect("munange.db")
+        connection = sqlite3.connect(resource_path("munange.db"))
         cursor = connection.cursor()
         query = "SELECT date, expenses FROM expenditure WHERE employee_no=? AND date LIKE ?"
         time_method = datetime.datetime(date.today().year, date.today().month, date.today().day)
@@ -106,7 +119,7 @@ class ViewExpenses:
         self.title.configure(text='EXPENDITURE HISTORY')
         self.total_amount_label.configure(text='')
 
-        connection = sqlite3.connect("munange.db")
+        connection = sqlite3.connect(resource_path("munange.db"))
         cursor = connection.cursor()
         cursor.execute("SELECT date FROM expenditure WHERE employee_no=?", (self.employee_id, ))
         dates = cursor.fetchall()

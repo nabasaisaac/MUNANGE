@@ -1,10 +1,24 @@
 import sqlite3
 import io
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
 from main_window import MainWindow
 from tkinter import messagebox
 import datetime
+
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 class AddCustomers:
     def __init__(self, display_window):
@@ -28,7 +42,7 @@ class AddCustomers:
         self.basic_infor_frame.pack(side=LEFT, pady=20, padx=(0, 20), fill=X, expand=True)
 
         global default_circular_image
-        image = Image.open('images/default_photo.png')
+        image = Image.open(resource_path('images/default_photo.png'))
         default_circular_image = MainWindow.__new__(MainWindow).make_circular_image(image)
         self.customer_photo_label = CTkLabel(self.side_frame, fg_color='white', bg_color='white', text='',
                                              image=CTkImage(default_circular_image, size=(150, 150)))
@@ -141,7 +155,7 @@ class AddCustomers:
         self.save_frame = CTkFrame(self.basic_infor_frame, fg_color='white', bg_color='white')
         self.save_frame.pack(fill=X, padx=20, pady=(10, 80), expand=True)
         self.save_button = CTkButton(self.save_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
-                                     image=CTkImage(Image.open('icons/save.png'), size=(20, 20)), text_color='white',
+                                     image=CTkImage(Image.open(resource_path('icons/save.png')), size=(20, 20)), text_color='white',
                                      text='Save', command=self.saving_customer)
         self.save_button.pack(side=RIGHT)
 
@@ -152,13 +166,13 @@ class AddCustomers:
                                                                 filetypes=(('jpg files', '*.jpg'), ('png files', '*.png'),
                                                                            ('All types', '*.*')))
 
-            current_current_passport = Image.open(self.passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.passport_image_browsed))
 
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
         except AttributeError:
             self.passport_image_browsed = 'images/default_photo.png'
-            current_current_passport = Image.open(self.passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.passport_image_browsed))
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
 
@@ -207,7 +221,7 @@ class AddCustomers:
             self.email_entry.delete(0, END)
             self.sur_name_entry.focus_set()
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get():
@@ -292,16 +306,16 @@ class AddCustomers:
 
         self.back_button = CTkButton(self.side_frame, bg_color='white', fg_color='#0C2844', font=('roboto', 15),
                                     text='Back', text_color='white', compound=LEFT,
-                                    image=CTkImage(Image.open('icons/back_image.png')), width=20,
+                                    image=CTkImage(Image.open(resource_path('icons/back_image.png'))), width=20,
                                     command=self.back_to_view_customers)
         self.back_button.pack(side=LEFT, pady=(0, 10), padx=(20, 0))
         self.guarantor = CTkButton(self.side_frame, bg_color='white', fg_color='#b7c1d1', font=('roboto', 15),
                                     text='', text_color='#0C2844', compound=LEFT, hover_color='#98a6bd',
-                                    image=CTkImage(Image.open('icons/guarantor.png')), width=20)
+                                    image=CTkImage(Image.open(resource_path('icons/guarantor.png'))), width=20)
                                     # command=self.back_to_view_customers)
         self.guarantor.pack(side=RIGHT, pady=(0, 10), padx=(0, 20))
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM guarantors WHERE guarantor_id=?", (customer_data[0],))
         guarantor_details = cursor.fetchone()
@@ -337,7 +351,7 @@ class AddCustomers:
 
         self.delete_button = CTkButton(self.save_frame, bg_color='white', fg_color='#ff5c5c', font=('roboto', 15),
                                     text='Delete', text_color='white', compound=LEFT, width=100, hover_color='#ff3f3f',
-                                    image=CTkImage(Image.open('icons/DELETE.png'), size=(15, 15)),
+                                    image=CTkImage(Image.open(resource_path('icons/DELETE.png')), size=(15, 15)),
                                     command=lambda: self.deleting_customer(customer_data))
         self.delete_button.pack(side=RIGHT, padx=(0, 15))
 
@@ -375,7 +389,7 @@ class AddCustomers:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
             
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get().strip():
@@ -490,7 +504,7 @@ class AddCustomers:
                                                                     ('jpg files', '*.jpg'), ('png files', '*.png'),
                                                                     ('All types', '*.*')))
 
-            current_current_passport = Image.open(self.new_passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.new_passport_image_browsed))
 
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
@@ -512,7 +526,7 @@ class AddCustomers:
                                                 f'permanently delete {customer_data[2].split()[-1]}',
                                                parent=self.display_window)
         if confirm_deletion:
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             cursor.execute("PRAGMA foreign_keys = ON")
             cursor.execute(f"DELETE FROM customers WHERE customer_id='{customer_data[0]}'")
@@ -576,7 +590,7 @@ class AddCustomers:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get():
@@ -622,12 +636,6 @@ class AddCustomers:
         self.basic_infor_label.configure(text='Guarantor Basic Information')
         self.save_button.configure(text='Update', command=lambda: self.update_guarantor(guarantor_data))
         self.delete_button.configure(command=lambda: self.deleting_guarantor(guarantor_data))
-        # self.delete_button = CTkButton(self.save_frame, bg_color='white', fg_color='#ff5c5c', font=('roboto', 15),
-        #                             text='Delete', text_color='white', compound=LEFT, width=100, hover_color='#ff3f3f',
-        #                             image=CTkImage(Image.open('icons/DELETE.png'), size=(15, 15)),
-        #                             command=lambda: self.deleting_guarantor(guarantor_data))
-        #
-        # self.delete_button.pack(side=RIGHT, padx=(0, 15))
 
         if len(guarantor_data[1].split()) >= 3:
             self.sur_name_entry.insert(0, guarantor_data[1].split()[0])
@@ -681,7 +689,7 @@ class AddCustomers:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get():
@@ -729,7 +737,7 @@ class AddCustomers:
         confirm_deletion = messagebox.askyesno('Delete Guarantor', f'Are you sure you want to delete '
                                                 f'{guarantor_data[1].split()[1]}\nas a guarantor?', parent=self.display_window)
         if confirm_deletion:
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             cursor.execute("DELETE FROM guarantors WHERE guarantor_id=?", (guarantor_data[0],))
             connection.commit()

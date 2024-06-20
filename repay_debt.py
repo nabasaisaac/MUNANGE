@@ -1,11 +1,23 @@
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
 from main_window import MainWindow
-from tkinter import ttk
 import sqlite3
 import datetime
 from datetime import date, datetime, timedelta
 import io
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class RepayDebt:
@@ -67,7 +79,7 @@ class RepayDebt:
         right_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
         global default_circular_image
-        image = Image.open('images/default_photo.png')
+        image = Image.open(resource_path('images/default_photo.png'))
         default_circular_image = MainWindow.__new__(MainWindow).make_circular_image(image)
         self.customer_photo_label = CTkLabel(photo_frame, fg_color='white', bg_color='white', text='',
                                              image=CTkImage(default_circular_image, size=(120, 120)))
@@ -138,7 +150,7 @@ class RepayDebt:
         self.amount_entry.bind('<Return>', self.confirm_repayment)
 
         self.confirm_button = CTkButton(self.repay_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
-                                     image=CTkImage(Image.open('icons/save.png'), size=(20, 20)), text_color='white',
+                                     image=CTkImage(Image.open(resource_path('icons/save.png')), size=(20, 20)), text_color='white',
                                      text='Confirm Payment', font=('roboto', 15),
                                      command=lambda: self.confirm_repayment(None))
         self.confirm_button.pack(side=RIGHT, padx=20, pady=(15, 40))
@@ -193,7 +205,7 @@ class RepayDebt:
                 setting_to_default()
                 return
 
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             query = ("SELECT customers.photo, customers.name, loans.loan_id, loans.loan_date, loans.amount, "
                      "loans.loan_deadline, loans.balance FROM customers JOIN loans ON customers.customer_id="
@@ -329,7 +341,7 @@ class RepayDebt:
             MainWindow.__new__(MainWindow).unsuccessful_information('Date is out of loan period')
             return
         else:
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
 
             new_balance = int(customer_info[6]) - int(self.amount_entry.get().strip())

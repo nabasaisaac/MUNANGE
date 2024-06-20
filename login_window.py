@@ -1,18 +1,17 @@
 import socket
 from customtkinter import *
-import asyncio
 import sqlite3
 from tkinter import *
 import numpy as np
 from email.message import EmailMessage
 import ssl
 import smtplib
-from PIL import ImageTk, Image, ImageFilter, ImageTk, ImageEnhance, ImageSequence
+from PIL import Image, ImageFilter, ImageTk, ImageEnhance, ImageSequence
 import os
 import sys
 
-
 # https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
 
 def resource_path(relative_path):
     try:
@@ -37,45 +36,7 @@ class Login_window:
     def calling_all_methods_here(self):
         self.designing_window(self.window)
         # self.splash_screen()
-    """Splash window here"""
-    # def splash_screen(self):
-    #     screen_width = self.window.winfo_screenwidth() // 2 - 40
-    #     screen_height = self.window.winfo_screenheight() // 2 - 50
-    #     # print(screen_width, screen_height)
-    #     self.window.geometry(f'450x250+{screen_width}+{screen_height}')
-    #     # self.window.resizable(False, False)
-    #     self.window.minsize(450, 250)
-    #     self.window.maxsize(450, 250)
-    #     self.window.attributes('-topmost', True)
-    #
-    #     splash_window_frame = CTkFrame(self.window, fg_color='white', bg_color='white')
-    #     splash_window_frame.place(relheight=1, relwidth=1)
-    #
-    #     CTkLabel(splash_window_frame, text='BursarPlus', font=('roboto', 30), text_color='#1379FF', fg_color='white',
-    #              bg_color='white').place(x=150, y=50)
-    #     CTkLabel(splash_window_frame, image=CTkImage(Image.open(resource_path('icons/plus.png')), size=(20, 20)),
-    #              text='',
-    #              bg_color='white', fg_color='white').place(x=293, y=43)
-    #
-    #     progress_bar = CTkProgressBar(splash_window_frame, orientation='horizontal', mode='determinate',
-    #                                   fg_color='white', bg_color='white', progress_color='#1379FF', width=130,
-    #                                   height=5)
-    #     progress_bar.place(x=160, y=100)
-    #     progress_bar.set(0)
-    #     progress_bar.start()
-    #
-    #     #
-    #     CTkLabel(splash_window_frame, text='Loading...', font=('roboto', 15), fg_color='white', bg_color='white'
-    #              , text_color='#1379FF').place(x=20, y=180)
-    #
-    #     CTkLabel(splash_window_frame, text='\t© All rights reserved by Itech co ltd 2024.', font=('roboto', 12),
-    #              text_color='black', bg_color='white', fg_color='white').place(x=170, y=220)
-    #
-    #     def kill():
-    #         progress_bar.stop()
-    #         self.designing_window(self.window)
-    #
-    #     self.window.after(1700, kill)
+
     def process_image(self, image_path, blur_radius=20, transparency=20):
         # Open the image
         image = Image.open(image_path).convert("RGBA")
@@ -119,25 +80,12 @@ class Login_window:
         # CTkFrame(side_frame_canvas, fg_color='white', corner_radius=50).pack(pady=200)
         global background_image
         background_image = ImageTk.PhotoImage(Image.open(resource_path('images/i.png')))
-        # self.side_frame_canvas.create_image(100, 500, image=background_image)
 
-
-        # self.logo = CTkLabel(side_frame_canvas, image=CTkImage(background_image, size=(50, 50)), text='Tech',
-        #                      font=('arial', 35, 'bold'), text_color='black', compound=LEFT)
-        # self.logo.place(x=5, y=5)
-        # self.logo2 = CTkLabel(side_frame_canvas, text='Innovate, Implement, Inspire.', font=('roboto', 15),
-        #                    text_color='black')
-        # self.logo2.place(x=5, y=54)
-        #self.side_frame_canvas.create_text(40, 30, text='I', fill='#398FFF', font=('roboto', 40))
         self.side_frame_canvas.create_image(50, 50, image=background_image)
         self.side_frame_canvas.create_text(140, 50, text='Tech', fill='black', font=('arial', 35, 'bold'))
 
         self.side_frame_canvas.create_text(140, 90, text='Innovate, Implement, Inspire.', fill='black', font=('roboto', 15))
 
-        # global login_frame_image
-        # login_frame_image = ImageTk.PhotoImage(Image.open(resource_path('images/login_frame.png')))
-        #
-        # self.side_frame_canvas.create_image(500, 200, image=login_frame_image,)
         self.login_frame = CTkFrame(self.background, width=350, height=450, corner_radius=40, fg_color='#ffffff',
                                     bg_color='white')
         self.login_frame.pack(pady=100)
@@ -208,20 +156,20 @@ class Login_window:
 
         self.window.iconbitmap(resource_path('icons/home2.ico'))
         self.window.title('Home')
-        # if self.user_name_entry.get().strip() == '' or self.password_entry.get().strip() == '':
-        #     self.unsuccessful_information('All fields are required')
-        #     return
-        # connection = sqlite3.connect('bursarplus.db')
-        # cursor = connection.cursor()
-        # cursor.execute("SELECT username, password FROM bursar")
-        # bursar_information = cursor.fetchone()
-        # username = bursar_information[0]
-        # password = bursar_information[1]
-        # cursor.close()
-        # connection.close()
-        # if self.user_name_entry.get() != username or self.password_entry.get() != password:
-        #     self.unsuccessful_information('Invalid username or password')
-        #     return
+        if self.user_name_entry.get().strip() == '' or self.password_entry.get().strip() == '':
+            self.unsuccessful_information('All fields are required')
+            return
+        connection = sqlite3.connect(resource_path('munange.db'))
+        cursor = connection.cursor()
+        cursor.execute("SELECT username, password FROM profile WHERE user_id=1")
+        bursar_information = cursor.fetchone()
+        username = bursar_information[0]
+        password = bursar_information[1]
+        cursor.close()
+        connection.close()
+        if self.user_name_entry.get() != username or self.password_entry.get() != password:
+            self.unsuccessful_information('Invalid username or password')
+            return
 
         self.window.after(0, lambda: window.wm_state('zoomed'))
 
@@ -258,7 +206,7 @@ class Login_window:
                 return
 
         gif_path = "images/giphy.gif"
-        gif = Image.open(gif_path)
+        gif = Image.open(resource_path(gif_path))
         gif2 = ImageTk.PhotoImage(Image.open(resource_path(gif_path)))
         gif_frames = [ImageTk.PhotoImage(frame) for frame in ImageSequence.Iterator(gif)]
         label = Label(self.background, image=gif2, bg='white', fg='white', text='', width=200, height=200)
@@ -294,7 +242,7 @@ class Login_window:
 
         correct_input = CTkLabel(self.window, text=f'   {info}  ', text_color='#3BA541', bg_color='#e9edf2',
                                  fg_color='white', corner_radius=5, width=70, height=45, compound=LEFT,
-                                 image=CTkImage(Image.open('icons/tick.png')), font=('roboto', 15))
+                                 image=CTkImage(Image.open(resource_path('icons/tick.png'))), font=('roboto', 15))
 
         correct_input.place(relx=0.35, rely=0.3)
         animating_label()
@@ -308,7 +256,7 @@ class Login_window:
             global y2
             if y2 >= -0.1:  # Continue animating while y is less than 0.4
                 y2 -= 0.01
-                invalid_input.place(relx=0.43, rely=y2)
+                invalid_input.place(relx=0.42, rely=y2)
                 self.window.after(4, destroying_label)
             else:
                 invalid_input.destroy()
@@ -317,10 +265,10 @@ class Login_window:
             global y
             if y < 0.07:  # Continue animating while y is less than 0.4
                 y += 0.01
-                invalid_input.place(relx=0.43, rely=y)
+                invalid_input.place(relx=0.42, rely=y)
                 self.window.after(5, animating_label)  # Call the function again after 10ms
             else:  # If y is 0.4 or more, stop animation
-                invalid_input.place(relx=0.43, rely=y)  # Ensure the label is placed
+                invalid_input.place(relx=0.42, rely=y)  # Ensure the label is placed
                 # destroying_label()
                 self.window.after(2000, destroying_label)
 
@@ -456,7 +404,7 @@ class Login_window:
             except ValueError:
                 self.unsuccessful_information("Invalid OTP")
                 return
-            connection = sqlite3.connect('munange.db')
+            connection = sqlite3.connect(resource_path('munange.db'))
             cursor = connection.cursor()
             cursor.execute("UPDATE profile SET username=?, password=? WHERE user_id=1",
                            (self.username_entry.get().strip(), self.password_entry.get()))
@@ -468,7 +416,7 @@ class Login_window:
 
     def sent_otp(self):
         self.yes_button.configure(state=NORMAL)
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
         cursor.execute("SELECT email FROM profile WHERE user_id=1")
         email = cursor.fetchone()[0]
@@ -504,20 +452,7 @@ class Login_window:
             widget.destroy()
         Login_window(self.window)
 
-    # def create_rounded_image(self, image_path, corner_radius):
-    #     # Open the image
-    #     image = Image.open(image_path).convert("RGBA")
-    #
-    #     # Create a mask with rounded corners
-    #     mask = Image.new('L', image.size, 0)
-    #     draw = ImageDraw.Draw(mask)
-    #     draw.rounded_rectangle((0, 0) + image.size, corner_radius, fill=255)
-    #
-    #     # Apply the mask to the image
-    #     rounded_image = Image.new('RGBA', image.size)
-    #     rounded_image.paste(image, (0, 0), mask)
-    #
-    #     return rounded_image
+
 
 
 def main():

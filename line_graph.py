@@ -1,6 +1,4 @@
 import sqlite3
-
-import customtkinter as ctk
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import datetime
@@ -10,7 +8,22 @@ from scipy.interpolate import make_interp_spline
 import matplotlib.pyplot as plt  # Import matplotlib's pyplot module
 from matplotlib.font_manager import FontProperties
 
-connection = sqlite3.connect("munange.db")
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+connection = sqlite3.connect(resource_path("munange.db"))
 cursor = connection.cursor()
 cursor.execute("SELECT loan_date, CAST(amount AS INT) FROM loans WHERE status='on going'")
 data = cursor.fetchall()
@@ -29,19 +42,27 @@ new_dict_data = [{'loan_date':date, 'amount':amount} for
                  date, amount in dictionary_data.items()]
 new_dict_data.sort(key=lambda x: datetime.datetime.strptime(x['loan_date'], '%d-%b-%Y'))
 
-print(new_dict_data)
 
 # Extract x and y values
 x = [datetime.datetime.strptime(entry['loan_date'], '%d-%b-%Y') for entry in new_dict_data]
 y = [entry['amount'] for entry in new_dict_data]
 
-print(y)
+
 # Spline interpolation for smoother line
 x_numeric = mdates.date2num(x)
-spl = make_interp_spline(x_numeric, y, k=3)  # k=3 for cubic spline
+  # k=3 for cubic spline
 x_smooth = np.linspace(x_numeric.min(), x_numeric.max(), 300)
-y_smooth = spl(x_smooth)
 x_smooth_dates = mdates.num2date(x_smooth)
+try:
+    spl = make_interp_spline(x_numeric, y, k=3)
+    y_smooth = spl(x_smooth)
+except ValueError:
+    spl = make_interp_spline(x_numeric, y, k=1)
+    y_smooth = spl(x_smooth)
+except IndexError:
+    # spl = make_interp_spline(x_numeric, y, k=0)
+    # y_smooth = spl(x_smooth)
+    pass
 
 
 class LineGraph:
@@ -118,3 +139,5 @@ class LineGraph:
         canvas = FigureCanvasTkAgg(figure, master=self.display_frame)
         canvas.draw()
         canvas.get_tk_widget().pack(pady=5)
+
+

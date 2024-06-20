@@ -1,5 +1,20 @@
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
+import os
+import sys
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 class Customers:
     def __init__(self, display_window):
         self.display_window = display_window
@@ -15,14 +30,14 @@ class Customers:
 
         self.view_customers_button = CTkButton(self.upper_buttons_frame, text='View Customers', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
-                                        font=('roboto', 15), image=CTkImage(Image.open('icons/view_customers.png'),
+                                        font=('roboto', 15), image=CTkImage(Image.open(resource_path('icons/view_customers.png')),
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:
                                         self.sliding(self.view_customers_button, self.view_customers))
         self.view_customers_button.pack(side=LEFT)
 
         self.add_customers_button = CTkButton(self.upper_buttons_frame, text='Customers', text_color='white',
                                         corner_radius=0, bg_color='#3BA541', fg_color='#3BA541', hover_color='#0C8A01',
-                                        font=('roboto', 15), image=CTkImage(Image.open('icons/add.png'),
+                                        font=('roboto', 15), image=CTkImage(Image.open(resource_path('icons/add.png')),
                                         size=(20, 20)), compound=LEFT,  height=35, width=150, command=lambda:
                                         self.sliding(self.add_customers_button, self.add_customers))
         self.add_customers_button.pack(side=LEFT, padx=(0, 5))

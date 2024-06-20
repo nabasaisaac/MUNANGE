@@ -1,9 +1,22 @@
 import sqlite3
 import io
 from customtkinter import *
-from PIL import ImageTk, Image
+from PIL import Image
 from main_window import MainWindow
-from tkinter import messagebox
+
+import os
+import sys
+
+
+# https://stackoverflow.com/questions/31836104/pyinstaller-and-onefile-how-to-include-an-image-in-the-exe-file
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class UpdateProfile:
@@ -26,7 +39,7 @@ class UpdateProfile:
         self.basic_infor_frame = CTkFrame(self.scrollable_frame, bg_color='gray95', fg_color='white',
                                    corner_radius=15,)
         self.basic_infor_frame.pack(side=LEFT, pady=20, padx=(0, 20), fill=X, expand=True)
-        connection = sqlite3.connect("munange.db")
+        connection = sqlite3.connect(resource_path("munange.db"))
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM profile")
         user_details = cursor.fetchone()
@@ -167,7 +180,7 @@ class UpdateProfile:
         self.save_frame = CTkFrame(self.basic_infor_frame, fg_color='white', bg_color='white')
         self.save_frame.pack(fill=X, padx=20, pady=(10, 80), expand=True)
         self.update_button = CTkButton(self.save_frame, bg_color='white', fg_color='#44aaee', hover_color='#2A9AE5',
-                                     image=CTkImage(Image.open('icons/save.png'), size=(20, 20)), text_color='white',
+                                     image=CTkImage(Image.open(resource_path('icons/save.png')), size=(20, 20)), text_color='white',
                                      text='Update', command=lambda: self.update_my_profile(user_details))
         self.update_button.pack(side=RIGHT)
 
@@ -179,7 +192,7 @@ class UpdateProfile:
                                                                     ('jpg files', '*.jpg'), ('png files', '*.png'),
                                                                     ('All types', '*.*')))
 
-            current_current_passport = Image.open(self.new_passport_image_browsed)
+            current_current_passport = Image.open(resource_path(self.new_passport_image_browsed))
 
             circular_image = MainWindow.__new__(MainWindow).make_circular_image(current_current_passport)
             self.customer_photo_label.configure(image=CTkImage(circular_image, size=(150, 150)))
@@ -219,7 +232,7 @@ class UpdateProfile:
                 MainWindow.__new__(MainWindow).unsuccessful_information('Invalid NIN')
                 return
 
-        connection = sqlite3.connect('munange.db')
+        connection = sqlite3.connect(resource_path('munange.db'))
         cursor = connection.cursor()
 
         if self.other_name_entry.get().strip():
